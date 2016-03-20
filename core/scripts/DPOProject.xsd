@@ -1,0 +1,183 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <!--
+        BooleanValues: for validation
+    -->
+    <xs:simpleType name="BooleanValues">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value='0'/> <!-- false -->
+            <xs:enumeration value='1'/> <!-- true -->
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!--
+        DPOProjectConfigurations: a module is built in debug and release configurations
+    -->
+    <xs:complexType name="DPOProjectConfigurations">
+        <xs:sequence>
+            <xs:element name="Debug" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Release" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        DPOProjectLibraryType can be static or dynamic
+    -->
+    <xs:complexType name="DPOProjectLibraryType">
+        <xs:sequence>
+            <xs:element name="Static" type="DPOProjectConfigurations" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Dynamic" type="DPOProjectConfigurations" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        When a module is 'dpo compliant' its value is 1 else 0.
+        When a module is not 'dpo compliant' (value == 0), we must define MPB and MPCIncludes.
+        MPB is the name of mpb file without extension (ex.: acelib.mpb ==> acelib).
+        MPCIncludes is the path where MPC can find the mpb file.
+    -->
+    <xs:complexType name="DPOCompliant">
+        <xs:sequence minOccurs="1" maxOccurs="1">
+            <xs:element name="Value" type="BooleanValues" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="ProductName" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="ProductFlavour" minOccurs="1" maxOccurs="1" default="vanilla"/>
+            <xs:element name="MPB" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="MPCIncludes" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        ModuleGenerationTypeValues: a module can be generated as executable (0),
+        as static library (5), as dynamic library (6) or as both static and
+        dynamic library (7).
+    -->
+    <xs:simpleType name = "ModuleGenerationTypeValues">
+        <xs:restriction base="xs:integer">
+            <xs:enumeration value='0'/> <!-- executable -->
+            <xs:enumeration value='1'/> <!-- executable along a dpo compliant library -->
+            <xs:enumeration value='2'/> <!-- implementation header file/abstract class header -->
+            <xs:enumeration value='4'/> <!-- just created library -->
+            <xs:enumeration value='5'/> <!-- static library -->
+            <xs:enumeration value='6'/> <!-- dynamic library -->
+            <xs:enumeration value='7'/> <!-- static and dynamic library -->
+            <!--
+                bitset: xyz, where
+                x:  0 => executable (generate project for
+                                     executable not for library)
+                    1 => library (generate project for static or
+                                  dynamic library)
+                y:  means nothing when x is 0 and
+                    means that we want to generate project
+                    as dynamic library when x is 1
+                z:  means nothing when x is 0 and
+                    means that we want to generate project
+                    as static library when x is 1
+                Use cases:
+                    module_generation = 0  (000) => generate project as executable
+                    module_generation = 1  (001) => executable along a dpo compliant library (automatically created when a library is created)
+                    module_generation = 2  (010) => header file containing implementation
+                    module_generation = 3  (011) => should never happen
+                    module_generation = 4  (100) => generate project as library (we don't yet know which of dynamic/static or both will be generated)
+                    module_generation = 5  (101) => generate project for static library
+                    module_generation = 6  (110) => generate project for dynamic library
+                    module_generation = 7  (111) => generate project for both static and dynamic library
+            -->
+       </xs:restriction>
+    </xs:simpleType>
+
+    <!--
+        ProjectDependencyTypeValues: a dependency can be an executable (0)
+        (as runtime dependency), a static library (5) or a dynamic library (6)
+        but not both static and dynamic library.
+    -->
+    <xs:simpleType name = "ProjectDependencyTypeValues">
+        <xs:restriction base="xs:integer">
+            <xs:enumeration value='0'/> <!-- executable -->
+            <xs:enumeration value='1'/> <!-- executable along a dpo compliant library (automatically created when a library is created) -->
+            <xs:enumeration value='2'/> <!-- implementation header file  -->
+            <xs:enumeration value='5'/> <!-- static library -->
+            <xs:enumeration value='6'/> <!-- dynamic library -->
+            <!--
+                bitset: xyz, where
+                x:  0 => executable (generate project for
+                                     executable not for library)
+                    1 => library (generate project for static or
+                                  dynamic library)
+                y:  means nothing when x is 0 and
+                    means that we want to generate project
+                    as dynamic library when x is 1
+                z:  means nothing when x is 0 and
+                    means that we want to generate project
+                    as static library when x is 1
+                Use cases:
+                    module_usage = 0  (000) => generate project as executable
+                    module_usage = 1  (001) => should never happen
+                    module_usage = 2  (010) => should never happen
+                    module_usage = 3  (011) => should never happen
+                    module_usage = 4  (100) => should never happen
+                    module_usage = 5  (101) => generate project for static library
+                    module_usage = 6  (110) => generate project for dynamic library
+                    module_usage = 7  (111) => should never happen
+            -->
+       </xs:restriction>
+    </xs:simpleType>
+
+    <!--
+        A DPOProjectDependency is kind of pointer on the project (name + version + type)
+    -->
+    <xs:complexType name="DPOProjectDependency">
+        <xs:sequence>
+            <xs:element name="Name" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Version" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="TargetVersion" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Type" type="ProjectDependencyTypeValues" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="DPOCompliant" type="DPOCompliant" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        DPOProject: project definition
+    -->
+    <xs:complexType name="DPOProject">
+        <xs:sequence>
+            <xs:element name="Name" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Version" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="TargetVersion" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Type" type="ModuleGenerationTypeValues" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="TestAppOf" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="DPOCompliant" type="DPOCompliant" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Dependencies_when_dynamic" minOccurs="1" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="ProjectDependency" type="DPOProjectDependency" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Dependencies_when_static" minOccurs="1" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="ProjectDependency" type="DPOProjectDependency" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        DPOProjects: sequence of DPOProject
+    -->
+    <xs:complexType name="DPOProjectDependencies">
+        <xs:sequence>
+            <xs:element name="ProjectDependency" type="DPOProjectDependency" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!--
+        Elements
+    -->
+    <xs:element name="Project" type="DPOProject">
+    </xs:element>
+
+</xs:schema>

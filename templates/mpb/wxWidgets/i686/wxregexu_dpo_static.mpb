@@ -1,0 +1,10 @@
+project {
+  includes += $(WXWIDGETS_ROOT)/include
+  includes += $(WXWIDGETS_ROOT)/lib/vc_lib
+  specific(prop:windows) {
+    Debug::lit_libs   += wxregexud
+    Release::lit_libs += wxregexu
+  } else {
+    lit_libs += wxregexu
+  }
+}

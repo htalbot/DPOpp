@@ -1,0 +1,10 @@
+project {
+  includes += $(WXWIDGETS_ROOT)/src/zlib
+
+  specific(prop:windows) {
+    Debug::lit_libs += wxzlibd
+    Release::lit_libs += wxzlib
+  } else {
+    libs += wxzlib
+  }
+}

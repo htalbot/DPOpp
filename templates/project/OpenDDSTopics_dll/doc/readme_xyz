@@ -1,0 +1,11 @@
+Template dll
+------------
+
+This template contains an Interface Definition Language (IDL) file
+consisting of an example of an OpenDDS topic.
+
+The module namespace is named as XYZ_ns where XYZ is the name of the
+project and _ns is the suffix specifying that it is a namespace.
+
+For more about OpenDDS IDL, please refer to
+http://download.ociweb.com/OpenDDS/OpenDDS-latest.pdf

@@ -1,0 +1,16 @@
+project {
+  includes += $(LIBCONFIG_ROOT)/include
+  libpaths += $(LIBCONFIG_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += libconfig++d
+    Release::lit_libs += libconfig++
+    DisableSpecificWarnings += 4290
+    macros += _CRT_SECURE_NO_WARNINGS
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += libconfig++
+    // Release::lit_libs += libconfig++
+    lit_libs += libconfig++
+  }
+}

@@ -1,0 +1,8 @@
+project: wxcore_dpo {
+  specific(prop:windows) {
+    Debug::lit_libs   += wxmsw30ud_stc
+    Release::lit_libs += wxmsw30u_stc
+  } else {
+    libs += wxmsw30u_stc
+  }
+}

@@ -1,0 +1,11 @@
+Template dll
+------------
+
+This template contains an Interface Definition Language (IDL) file
+consisting of an example of a Corba interface (TAO).
+
+The module namespace is named as XYZ_ns where XYZ is the name of the
+project and _ns is the suffix specifying that it is a namespace.
+
+For more about Corba IDL (TAO), please refer to
+# TO_DO

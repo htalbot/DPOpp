@@ -1,0 +1,3 @@
+project: xyz_dependencies {
+    includes += $(XYZ_PRJ_ROOT)/include
+}

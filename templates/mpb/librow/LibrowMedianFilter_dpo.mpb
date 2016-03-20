@@ -1,0 +1,14 @@
+project {
+  includes += $(LIBROW_ROOT)/include
+  libpaths += $(LIBROW_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += LibrowMedianFilterd
+    Release::lit_libs += LibrowMedianFilter
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += 
+    // Release::lit_libs += 
+    // lit_libs += 
+  }
+}

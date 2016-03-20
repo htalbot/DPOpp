@@ -1,0 +1,36 @@
+Warning C4231
+=============
+
+(http://stackoverflow.com/questions/8130602/using-extern-template-c0x)
+
+In C++03, the compiler must instantiate a template whenever a fully specified
+template is encountered in a translation unit. If the template is instantiated
+with the same types in many translation units, this can dramatically increase
+compile times. There is no way to prevent this in C++03, so C++11 introduced
+extern template declarations, analogous to extern data declarations.
+
+    C++03 has this syntax to oblige the compiler to instantiate a template:
+
+      template class std::vector<MyClass>;
+
+    C++11 now provides this syntax:
+
+      extern template class std::vector<MyClass>;
+
+    which tells the compiler not to instantiate the template in this translation
+    unit.
+
+
+The warning: nonstandard extension used...
+------------------------------------------
+
+Microsoft VC++ used to have a non-standard version of this feature for some
+years already (in C++03). The compiler warns about that to prevent portability
+issues with code that needed to compile on different compilers as well.
+
+Look at the sample in the linked page (https://support.microsoft.com/en-us/kb/168958)
+to see that it works roughly the same way. You can expect the message to go away
+with future versions of MSVC, except of course when using other non-standard
+compiler extensions at the same time.
+
+

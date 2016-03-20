@@ -1,0 +1,115 @@
+
+- TO_DO: solve all TO_DO found in source code.
+
+- Linux: make dpo wroking in Linux
+
+- Code revue
+
+- Impact
+
+- Packaging - DPOPanelPool - production definition - load_products:
+
+    - identify selected pool
+
+    - exclude modules
+
+- get_project - present in DPOPanelProduct and DPOPanelPool: should we use only
+  one (->DPOUtils)?
+
+- Bug: Create a library (libX) with no test. Thereafter, create an executable
+       with the name test_libX. This involves lib5 as static
+
+- Workspace projects:
+
+    - refresh at the end only.
+
+    - add a show mpc menu
+
+- DPOPanelProduct: when including a project in the current one, it's possible
+                   that we have to select an mpb. When we select one (for
+                   example a dynamic one) --> we still need to choose
+                   dynamic/static after having selected mpb.
+
+- When we edit features file (ex.: wxwindows=1), we have to restart dpo because
+  features have not been refreshed.
+
+- Import wx: make features be updated automatically.
+
+- DPOPool
+    - activation: add validation on product dependencies
+
+    - Show products according to a product (according to its dependencies)
+
+- Doc:
+
+    - how to make a template
+
+    - how to make a layer
+
+- DPOActions - validate_project: check if modules exists for specified
+               types (debug/release)
+
+- Compare 2 pools to see which products are in a pool but not in the other
+
+- Flavour: mean to show description of a flavour
+
+- DPOPanelProduct:
+
+    - when creating a new product, create a default workspace
+      containing all projects. Each time a project is created,
+      include it in the all workspace
+
+    - managing workspace: add, delete, copy
+
+    - managing mru
+
+        - ordered by name or by time
+
+        - add, delete
+
+- Use of get_text (multilang)
+
+- msg_list: is there a maximum length for a column ? (wxWidgets)
+
+- DPOPanelProduct:
+
+    - hide 'Layers...' button when project is of type Abstract
+
+- Validate inputs everywhere: for ex. when we let a user enter a path, we
+                              want to validate if the path exists.
+
+- version.rc
+
+    - product name/version absent
+
+    - project version -> product version.
+
+- templates:
+
+    - header_abstract_class_dll/header_implementation_dll:
+
+        - Why _dll?
+
+        - Is there an incidence if I remove _dll?
+
+- DPOPanelProduct: remove a project (hide DPOProject.xml)
+
+- Layer ace_plugin: prevent static
+
+- Layer: is it possible to rollback ?
+
+- Layer - dialog_obj_and_ift_names: describe more each field in any circumstance
+
+- Layer - tao_client: suggest to use test_tao_server of object
+
+- xml: improve the code interfacing with xml file (better definition/distinction
+       between node and element)
+
+- use of wxGlage-0.7.1 or more recent
+
+- DPOProductWorkspaceProjectSideDlg: enlarge column.
+
+- DPOPostbuild.pm
+
+    - For non product local dependencies, copy runtimes
+    - Copy non compliant dependencies

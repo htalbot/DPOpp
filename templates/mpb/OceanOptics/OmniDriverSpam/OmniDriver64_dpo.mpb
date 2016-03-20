@@ -1,0 +1,14 @@
+project {
+  includes += $(OMNIDRIVERSPAM_ROOT)/include
+  libpaths += $(OMNIDRIVERSPAM_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += OmniDriver64
+    Release::lit_libs += OmniDriver64
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += 
+    // Release::lit_libs += 
+    lit_libs += 
+  }
+}

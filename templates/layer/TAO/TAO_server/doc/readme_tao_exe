@@ -1,0 +1,90 @@
+xyz
+==================================================================
+
+Instructions for building xyz as a corba server.
+------------------------------------------------------------------
+
+    - Implement application
+
+        - Open xyz/src/xyzAppLayer.h
+
+            Apply steps indicated in file "integration_examples/AppLayer_TAO_server.h".
+
+        - Open xyz/src/xyzAppLayer.cpp
+
+            Apply steps indicated in file "integration_examples/AppLayer_TAO_server.cpp".
+
+        - Open xyz/src/xyz.cpp
+
+            Adapt main function from "integration_examples/main_tao.cpp".
+
+        - Build application
+
+
+    - Client application
+
+        - Open xyz/test_xyz_client/test_xyz_clientAppLayer.cpp
+
+            - Set the name of the object: obj_impl_ref_name (the one set in
+              test_xyzAppLayer.cpp).
+
+            - Replace HOST:PORT by localhost:10000 (values corresponding to
+              the ones passed to server)
+
+            - Use the object according to the interface.
+
+        - Build application
+
+
+    - Run
+
+        - Starting the server
+
+            (release) xyz -ORBListenEndPoints iiop://localhost:10000
+            (debug) xyzd -ORBListenEndPoints iiop://localhost:10000
+
+                The server will wait for requests.
+
+                Notice that iiop is the same as the one set in client
+                application.
+
+        - Starting the client
+
+            (release) test_xyz_client
+            (debug) test_xyz_clientd
+
+
+
+
+A server becoming a client too.
+-------------------------------------------------
+
+    It is possible that a server needs to become a client of another
+    server. In this case, use AppLayer_TAO_client_server.h.
+	
+    - Create a task for requesting values
+
+        - Copy "integration_examples/AppLayer_TAO_client_server.h" to
+          xyz/src/xyz_client_side.h.
+
+        - Open xyz/src/xyz_client_side.h
+
+            - Change obj_impl_ref_name by the corresponding object to refer to.
+
+            - Change HOST:PORT by the right ip:port
+
+            - Adjust object calls according to the interface
+
+    - Integrate the new task
+
+        - open xyz/src/xyzAppLayer.cpp
+
+            - #include xyz_client_side.h"
+              (after #include "xyzAppLayer.h")
+
+            - Before the call to "tao_layer_->run()", write
+
+                Xyz_ClientSide cs;
+                cs.tao_layer(tao_layer_);
+                cs.activate();
+

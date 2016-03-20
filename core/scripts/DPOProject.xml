@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="DPOProject.xsd">
+  <Name>xyz</Name>
+  <Version>0.0.0</Version>
+  <TargetVersion>0.0.0</TargetVersion>
+  <Type>6</Type>
+  <TestAppOf />
+  <DPOCompliant>
+    <Value>1</Value>
+    <ProductName></ProductName>
+    <ProductFlavour>vanilla</ProductFlavour>
+    <MPB></MPB>
+    <MPCIncludes></MPCIncludes>
+  </DPOCompliant>
+  <Dependencies_when_dynamic></Dependencies_when_dynamic>
+  <Dependencies_when_static></Dependencies_when_static>
+</Project>

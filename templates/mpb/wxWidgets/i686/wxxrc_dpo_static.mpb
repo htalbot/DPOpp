@@ -1,0 +1,8 @@
+project: wxadvanced_dpo_static, wxhtml_dpo_static, wxbase_xml_dpo_static {
+  specific(prop:windows) {
+    Debug::lit_libs   += wxmsw30ud_xrc
+    Release::lit_libs += wxmsw30u_xrc
+  } else {
+    libs += wxmsw30u_xrc
+  }
+}

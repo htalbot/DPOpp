@@ -1,0 +1,10 @@
+project {
+  includes += $(WXWIDGETS_ROOT)/lib/vc_x64_lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += wxjpegd
+    Release::lit_libs += wxjpeg
+  } else {
+    lit_libs += wxjpeg
+  }
+}

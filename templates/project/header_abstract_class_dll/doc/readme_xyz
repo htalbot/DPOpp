@@ -1,0 +1,13 @@
+Template header_abstract_class
+------------------------------
+
+This project type is used to define abstract class for a plugin
+(DPO layer: ACEPlugin).
+
+As example, the method fn is declared.
+
+After applying modifications according to the needs, this project
+just have to be built.
+
+It can be used, among others, along a plugin (ACEPlugin layer).
+

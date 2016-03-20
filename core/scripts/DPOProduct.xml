@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Product xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="DPOProduct.xsd">
+  <Name>xyz</Name>
+  <Version>0.0.0</Version>
+  <Flavour>vanilla</Flavour>
+  <DPOCompliant>
+    <Value>1</Value>
+    <NonCompliantLibSeq />
+  </DPOCompliant>
+  <Runtime>
+    <RuntimeProductCompliantSeq></RuntimeProductCompliantSeq>
+    <RuntimeProductNonCompliantSeq></RuntimeProductNonCompliantSeq>
+  </Runtime>
+  <MPCIncludes />
+  <FreezeDirectory />
+</Product>

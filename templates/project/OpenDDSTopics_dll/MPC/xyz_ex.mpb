@@ -1,0 +1,77 @@
+project {
+
+    version =
+
+    sharedname = xyz
+    dynamicflags = XYZ_BUILD_DLL
+
+    includes += $(XYZ_PRJ_ROOT)/include
+    includes += $(XYZ_PRJ_ROOT)/include/xyz
+    libpaths +=
+    libs +=
+
+    dllout = $(XYZ_PRJ_ROOT)/lib/$(ConfigurationName)
+    libout = $(XYZ_PRJ_ROOT)/lib/$(ConfigurationName)
+
+    specific(prop:microsoft) {
+        Debug::runtime_library = MultiThreadedDebugDLL
+        Release::runtime_library = MultiThreadedDLL
+        intermediate_dir = ../build/$(ConfigurationName)
+        //ExceptionHandling = Async
+        DisableSpecificWarnings += 4503
+        DisableSpecificWarnings += 4996
+    }
+
+    specific(!vc9, !vc8, !vc7, !vc6, !gnuace, !make) {
+        // Before VC10, 'ConfigurationName' was used for configurations (Debug/Release).
+        // In VC10, 'ConfigurationName' is still supported but when used for 'Output Directory' and 'Intermediate Directory', it doesn't work anymore.
+        // We use 'Configuration' for versions greater than VC9 for 'Output Directory' and 'Intermediate Directory'.
+        dllout = $(XYZ_PRJ_ROOT)/lib/$(Configuration)
+        libout = $(XYZ_PRJ_ROOT)/lib/$(Configuration)
+        intermediate_dir = ../build/$(Configuration)
+    }
+
+    specific(prop:microsoft) {
+        postbuild += del ..\lib\$(ConfigurationName)\$(ProjectName)_* 2>nul
+        postbuild += type nul > ..\lib\$(ConfigurationName)\$(ProjectName)_$(PlatformName)_$(ProcessorArchitecture)
+        postbuild += xcopy /Q /Y xyz?.? ..\include\xyz
+        postbuild += xcopy /Q /Y xyz?.inl ..\include\xyz
+        postbuild += xcopy /Q /Y xyzTypeSupport?.? ..\include\xyz
+        postbuild += xcopy /Q /Y xyzTypeSupport?.inl ..\include\xyz
+        postbuild += xcopy /Q /Y xyzTypeSupportImpl.h ..\include\xyz
+        postbuild += xcopy /Q /Y xyz.idl ..\include\xyz  // to allow corba object using topic
+        postbuild += call postbuild.pl
+    } else {
+        postbuild += cp xyz?.? $(XYZ_PRJ_ROOT)/include/xyz
+        postbuild += cp xyz?.inl $(XYZ_PRJ_ROOT)/include/xyz
+        postbuild += cp xyzTypeSupport?.? $(XYZ_PRJ_ROOT)/include/xyz
+        postbuild += cp xyzTypeSupport?.inl $(XYZ_PRJ_ROOT)/include/xyz
+        postbuild += cp xyzTypeSupportImpl.h $(XYZ_PRJ_ROOT)/include/xyz
+        postbuild += cp xyz.idl $(XYZ_PRJ_ROOT)/include/xyz  // to allow corba object using topic
+        postbuild += ./postbuild.pl
+    }
+
+
+    Header_Files {
+        ../include/xyz/*
+        *.h
+    }
+
+    Documentation_Files {
+        ../doc/*
+    }
+
+    Define_Custom(Configuration) {
+    }
+
+    Configuration_Files {
+      ../etc/*
+    }
+
+    Define_Custom(Integration_Examples) {
+    }
+
+    Integration_Examples_Files {
+        ../integration_examples/*
+    }
+}

@@ -1,0 +1,14 @@
+Many licenses are involved.
+
+Core:
+    dpo/core/LICENSE
+
+Externals:
+    dpo/external_tools/dependency_walker: free utility (http://www.dependencywalker.com/)
+    dpo/external_tools/ldd: got to http://www.mingw.org/license
+    dpo/external_tools/MPC/4.1.8/docs/LICENSE
+    dpo/external_tools/rdiff-backup/windows/1.3.3/COPYING.txt
+
+Templates:
+    dpo/templates/LICENSE
+

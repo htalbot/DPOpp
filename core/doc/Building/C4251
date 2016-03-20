@@ -1,0 +1,11 @@
+Warning C4251
+=============
+
+Since we use DPO, consistency is ensured between modules at the
+level of arch, OS and toochain. This allows us to benefit, among other
+things, of the use of stl in C++ interfaces. For this reason, we don't care
+about warning C4251 and we can deactivate it.
+
+Note: C4251 can be ignored if you are deriving from a type in the Standard C++
+Library, compiling a debug release (/MTd) and where the compiler error message
+refers to _Container_base. (https://msdn.microsoft.com/en-us/library/esew7y1w.aspx)

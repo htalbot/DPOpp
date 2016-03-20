@@ -1,0 +1,89 @@
+
+//#include "ace/Init_ACE.h"
+#include "XyzFrame.h"
+
+#ifdef ACE_WIN32
+#include <shellapi.h> // CommandLineToArgvW
+#endif
+
+class XyzApp: public wxApp
+{
+public:
+    bool OnInit();
+    //int FilterEvent(wxEvent& event);
+
+protected:
+    XyzFrame * frame_;
+};
+
+
+bool XyzApp::OnInit()
+{
+    // use standard command line handling:
+    if ( !wxApp::OnInit() )
+        return false;
+
+    // parse the cmd line
+    int x = 50,
+        y = 50;
+    if ( argc == 3 )
+    {
+
+        wxSscanf(wxString(argv[1]), wxT("%d"), &x);
+        wxSscanf(wxString(argv[2]), wxT("%d"), &y);
+    }
+
+    // Create the main frame window
+    frame_ = new XyzFrame(0, -1, wxT("Xyz"));
+    frame_->Show(true);
+
+    return true;
+}
+
+//int MyApp::FilterEvent(wxEvent& event)
+//{
+//    if ((event.GetEventType() == wxEVT_KEY_DOWN) &&
+//        (((wxKeyEvent&)event).GetKeyCode() == WXK_F12) &&
+//        ((wxKeyEvent&)event).ShiftDown() &&
+//        ((wxKeyEvent&)event).ControlDown())
+//    {
+//        // ...
+//    }
+//
+//    return -1;
+//}
+
+
+#ifdef ACE_WIN32
+int __stdcall WinMain(HINSTANCE hInstance,
+  HINSTANCE hPrevInstance,
+  LPSTR lpCmdLine,
+  int nCmdShow)
+{
+    //ACE::init();
+
+    LPWSTR *argv;
+    int argc;
+
+    argv = CommandLineToArgvW(GetCommandLine(), &argc);
+    if (argv == NULL)
+    {
+        return 10;
+    }
+
+    wxApp::SetInstance( new XyzApp() );
+    wxEntryStart( argc, argv );
+    if (wxTheApp->OnInit())
+    {
+        wxTheApp->OnRun();
+    }
+    wxTheApp->OnExit();
+    wxEntryCleanup();
+
+    //ACE::fini();
+
+    return 0;
+}
+#else
+IMPLEMENT_APP(XyzApp)
+#endif

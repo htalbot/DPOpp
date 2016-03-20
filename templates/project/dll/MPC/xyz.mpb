@@ -1,0 +1,5 @@
+project: xyz_dependencies {
+    includes += $(XYZ_PRJ_ROOT)/include
+    libpaths += $(XYZ_PRJ_ROOT)/lib
+    libs += xyz
+}

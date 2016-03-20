@@ -1,0 +1,14 @@
+project {
+  includes += $(WXWIDGETS_ROOT)/include
+  libpaths += $(WXWIDGETS_ROOT)/lib/vc_dll
+
+  specific(prop:windows) {
+    Debug::lit_libs   += wxjpegd
+    Release::lit_libs += wxjpeg
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += wxjpeg
+    // Release::lit_libs += wxjpeg
+    lit_libs += wxjpeg
+  }
+}

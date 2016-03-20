@@ -1,0 +1,6 @@
+project {
+  includes += $(NIDAQMX_ROOT)/include
+  includes += $(NIDAQMX_ROOT)/include/NiDAQmx
+  libpaths += $(NIDAQMX_ROOT)/lib
+  lit_libs += NIDAQmx
+}

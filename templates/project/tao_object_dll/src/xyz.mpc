@@ -1,0 +1,4 @@
+project: xyz_ex, xyz_fit {
+
+    dynamicflags = XYZ_BUILD_DLL
+}

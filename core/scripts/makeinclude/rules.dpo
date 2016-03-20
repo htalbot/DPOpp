@@ -1,0 +1,132 @@
+SHELL=/bin/bash
+
+# Default configuration
+CFG ?= Debug
+VERBOSE ?= 1>/dev/null
+
+BUILD_TREE = $(PROJECT_ROOT)/build/$(PROJECT_NAME)
+
+ifeq ($(VERBOSE),1)
+  override VERBOSE =
+endif
+
+MACHINE = $(shell uname -m)
+ifeq ($(MACHINE), x86_64)
+   PIC_VALUE = PIC=-fPIC
+endif
+
+
+# If you want to use DEBUG symbols (DEBUG and NDEBUG), uncomment the
+# "OPTION_FLAGS" lines depending according to C or C++.
+ifeq ($(CFG), Debug)
+  CONFIGURATION_FLAGS = debug=1 optimize=0
+  OPTION_FLAGS = CPPFLAGS=-DDEBUG
+#   OPTION_FLAGS = CFLAGS=-DDEBUG
+else
+ifeq ($(CFG), Release)
+  CONFIGURATION_FLAGS = debug=0 optimize=1
+  OPTION_FLAGS = CPPFLAGS=-DNDEBUG
+#   OPTION_FLAGS = CFLAGS=-DNDEBUG
+endif
+endif
+
+CFG_PREFIX =
+CFG2 = $(CFG)
+
+ifneq ($(CFG),Debug)
+    ifneq ($(CFG),Release)
+        ifeq ($(CFG),Debug)
+            CFG2=Debug
+        else
+            ifeq ($(CFG),Release)
+                CFG2=Release
+            else
+                BAD_CFG=$(CFG)
+            endif
+        endif
+    endif
+endif
+
+CFG2 := $(CFG_PREFIX)$(CFG2)
+
+# Shell commands
+CLONE_BUILD_TREE_COMMAND := @echo "********** Clone build tree"; \
+	perl $(MPC_ROOT)/clone_build_tree.pl -f -b $(BUILD_TREE) -s $(PROJECT_SRC) $(CFG2) $(VERBOSE)
+
+DEPENDS_COMMAND := @echo "********** Make dependencies..."; \
+	$(OPTION_FLAGS) ConfigurationName=$(CFG2) PROJECT_ROOT=$(PROJECT_ROOT) $(MAKE) -C $(BUILD_TREE)/$(CFG2) -f $(MAKEFILE_TYPE).$(PROJECT_NAME)$(NAME_MODIFIER) $(CONFIGURATION_FLAGS) depend $(VERBOSE)
+
+BUILD_COMMAND := @echo "********** Build project..."; \
+	$(OPTION_FLAGS) ConfigurationName=$(CFG2) PROJECT_ROOT=$(PROJECT_ROOT) $(MAKE) -C $(BUILD_TREE)/$(CFG2) -f $(MAKEFILE_TYPE).$(PROJECT_NAME)$(NAME_MODIFIER) $(CONFIGURATION_FLAGS) versioned_so=0 $(PIC_VALUE)
+
+CLEAN_COMMAND := @echo "********** Clean project..."; \
+	$(OPTION_FLAGS) ConfigurationName=$(CFG2) PROJECT_ROOT=$(PROJECT_ROOT) $(MAKE) -C $(BUILD_TREE)/$(CFG2) -f $(MAKEFILE_TYPE).$(PROJECT_NAME)$(NAME_MODIFIER) $(CONFIGURATION_FLAGS) clean
+
+REALCLEAN_COMMAND := @echo "********** Clean (realclean) project..."; \
+	$(OPTION_FLAGS) ConfigurationName=$(CFG2) PROJECT_ROOT=$(PROJECT_ROOT) $(MAKE) -C $(BUILD_TREE)/$(CFG2) -f $(MAKEFILE_TYPE).$(PROJECT_NAME)$(NAME_MODIFIER) $(CONFIGURATION_FLAGS) realclean
+
+
+.PHONY: all
+all: title checkcfg check_makefile_type clone_build_tree depends build
+
+.PHONY: title
+title:
+	@echo "--------------------------------------------"
+	@echo "----- Project name - $(PROJECT_NAME)"
+	@echo "----- Configuration - $(CFG2)"
+	@echo "----- Project root - $(PROJECT_ROOT)"
+	@echo "----- Build tree - $(BUILD_TREE)"
+	@echo "----- Project source - $(PROJECT_SRC)"
+	@echo "----- Machine - $(MACHINE)"
+	@echo "----- Makefile type - $(MAKEFILE_TYPE)"
+	@echo "--------------------------------------------"
+
+
+# - Validate CFG
+.PHONY: checkcfg
+checkcfg:
+	@if  [[ ! "$(CFG)" == "Debug" && ! "$(CFG)" == "Release" ]]; \
+	then \
+		echo "!!!!!!!!!! CFG ($(CFG)) badly defined. Can not go further in build process !!!!!!!!!!"; \
+		exit 1; \
+	fi;
+
+
+# - Validate makefile type
+.PHONY: check_makefile_type
+check_makefile_type:
+	@if  [[ ! "$(MAKEFILE_TYPE)" == "GNUmakefile" && ! "$(MAKEFILE_TYPE)" == "Makefile" ]]; \
+	then \
+		echo "!!!!!!!!!! MAKEFILE_TYPE ($(MAKEFILE_TYPE)) not implemented. Can not go further in process !!!!!!!!!!"; \
+		exit 1; \
+	fi;
+
+# - Clone build tree to keep src directory clean (only source files, not generated ones).
+.PHONY: clone_build_tree
+clone_build_tree:
+	$(CLONE_BUILD_TREE_COMMAND)
+
+# - depends: to create dependencies in makefiles. For example, if a program
+#   refers to header file "include/project/header.h" and there is change in
+#   this header file, we are assured that changes are seen by the compiler.
+.PHONY: depends
+depends:
+	@$(DEPENDS_COMMAND)
+
+# - generated: needed by Makefile type
+.PHONY: generated
+generated:
+
+.PHONY: build
+build:
+	@$(BUILD_COMMAND)
+
+# - clean
+.PHONY: clean
+clean: title checkcfg
+	@$(CLEAN_COMMAND)
+
+# - realclean
+.PHONY: realclean
+realclean: title checkcfg
+	@$(REALCLEAN_COMMAND)

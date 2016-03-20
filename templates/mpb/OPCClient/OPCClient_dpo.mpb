@@ -1,0 +1,5 @@
+project: OPCClient_dependencies {
+    includes += $(OPCCLIENT_ROOT)/include
+    libpaths += $(OPCCLIENT_ROOT)/lib
+    libs += OPCClient
+}

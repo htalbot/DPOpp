@@ -1,0 +1,12 @@
+Template header_implementation
+------------------------------
+
+Sometimes, implementation takes place in header file. These files should also
+be monitored at the level of versions. That is why we make a specific project
+for haeder files.
+
+As usual, the header file contains a class as guideline only.
+
+After applying modifications according to the needs, this project
+just have to be built and tested with its test_app (if not removed
+from the workspace).

@@ -1,0 +1,5 @@
+PROJECT_NAME = project_or_test_name
+PROJECT_ROOT = $(XYZ_ROOT)
+PROJECT_SRC = $(PROJECT_ROOT)/src_or_test
+
+include $(DPO_CORE_ROOT)/makeinclude/rules.dpo

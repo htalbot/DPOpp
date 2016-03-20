@@ -1,0 +1,5 @@
+project {
+    includes += $(AQUA_DAQ_ROOT)/include
+    libpaths += $(AQUA_DAQ_ROOT)/lib
+    lit_libs += AQUA_DAQ_SIMPLE
+}

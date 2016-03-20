@@ -1,0 +1,38 @@
+DPO is a tool to manage C++ projects.
+
+It defines the concepts of product, workspace and project and mainly, the
+concept of 'depot'.
+
+A 'depot' is a directory containing all that is needed (libraries/executables,
+called modules) by a developper to easily integrate an existing module in its
+own project. It can contain several instances of a module according to the
+architecture (32/64), the operating system (Windows/Linux) and
+toolchain (vc10, vc11, vc12, gcc...). This is useful for a team to have
+any prebuilt modules available at any time.
+
+A project is the definition of what is required to build a C++ project.
+It is used to generate .vcxproj/makefile files with the help of MPC:
+http://www.ociweb.com/products/mpc.
+
+A workspace is used to gather projects for a working session.
+
+A product is a set of projects.
+
+DPO can create product, projects and define workspaces. It can generate
+.sln/.vcxproj/makefile with MPC (http://www.ociweb.com/products/mpc/).
+It excludes the need to define parameters from inside the IDE: include
+directories, additional library directories and librarie dependencies.
+(MPC does all). Also, build order is set automatically by the relationship
+of projects defined in the product.
+
+It manages dependencies/versions of projects/products validating relationships.
+
+It makes it possible to use external modules not using DPO.
+
+DPO can manage the 'depot' pushing new products, activating products according
+to product versions, creating package from a product and backing it up. It can
+also determine the impact of a change made to a module presenting all the
+modules that depend on the changed one.
+
+
+

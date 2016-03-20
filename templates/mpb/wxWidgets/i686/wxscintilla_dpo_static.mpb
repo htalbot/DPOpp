@@ -1,0 +1,14 @@
+project {
+  includes += $(WXWIDGETS_ROOT)/include
+  libpaths += $(WXWIDGETS_ROOT)/lib/vc_lib
+  libpaths += $(WXWIDGETS_ROOT)/src/stc/scintilla/include
+  libpaths += $(WXWIDGETS_ROOT)/src/stc/scintilla/lexlib
+  libpaths += $(WXWIDGETS_ROOT)/src/stc/scintilla/src
+
+  specific(prop:windows) {
+    Debug::lit_libs   += wxscintillad
+    Release::lit_libs += wxscintilla
+  } else {
+    lit_libs += wxscintilla
+  }
+}

@@ -1,0 +1,11 @@
+project: wxzlib_dpo_static, wxjpeg_dpo_static {
+  includes += $(WXWIDGETS_ROOT)/include
+  includes += $(WXWIDGETS_ROOT)/src/tiff/libtiff
+
+  specific(prop:windows) {
+    Debug::lit_libs   += wxtiffd
+    Release::lit_libs += wxtiff
+  } else {
+    lit_libs += wxtiff
+  }
+}

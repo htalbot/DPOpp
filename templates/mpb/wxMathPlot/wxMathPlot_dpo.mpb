@@ -1,0 +1,14 @@
+project {
+  includes += $(WXMATHPLOT_ROOT)/include
+  libpaths += $(WXMATHPLOT_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += wxMathPlotd
+    Release::lit_libs += wxMathPlot
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += wxMathPlot
+    // Release::lit_libs += wxMathPlot
+    lit_libs += wxMathPlot
+  }
+}

@@ -1,0 +1,9 @@
+project: wxcore_dpo_static {
+  specific(prop:windows) {
+    Debug::lit_libs   += wxmsw30ud_gl
+    Release::lit_libs += wxmsw30u_gl
+  } else {
+    libs += wxmsw30u_gl
+  }
+}
+

@@ -1,0 +1,15 @@
+project {
+  includes += $(SICK_ROOT)/include
+  includes += $(SICK_ROOT)/include/icon
+  libpaths += $(SICK_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += icon_vc100d_x64
+    Release::lit_libs += icon_vc100_x64
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += icon_vc100_x64
+    // Release::lit_libs += icon_vc100_x64
+    lit_libs += icon_vc100_x64
+  }
+}

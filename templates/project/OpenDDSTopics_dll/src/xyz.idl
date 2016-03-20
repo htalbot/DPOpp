@@ -1,0 +1,13 @@
+
+module XYZ_ns
+{
+#pragma DCPS_DATA_TYPE "XYZ_ns::Xyz"
+#pragma DCPS_DATA_KEY "XYZ_ns::Xyz id"
+
+    struct Xyz {
+        string id;
+        long value;
+
+        // TO_DO: sample of basics syntaxes
+    };
+};

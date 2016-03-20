@@ -1,0 +1,71 @@
+Template tao_object_dll
+-----------------------
+
+This template contains:
+
+    -   xyz_i.h/.cpp
+
+        These files contain the implementation of the interface specified when
+        creating the project from the tao_object_dll template.
+
+        They have to be changed according to the interface specified when
+        creating the project from the tao_object_dll template
+
+    -   test_xyzAppLayer.cpp
+
+        Application acting as a Corba server hosting the object. It is used
+        to activate the Corba object  in a way that a Corba client can call
+        services of the object.
+
+        Here is the line to change
+        (indicated by  '// <--' at the end of the lines):
+
+            - ID of the object reference (obj_impl_ref_name)
+              For example: change obj_impl_ref_name by XyzObject1
+
+    -   test_xyz_clientAppLayer.cpp
+
+        Application acting as a Corba client using the services of the object.
+
+        Here are the lines to change
+        (indicated by  '// <--' at the end of the lines):
+
+            - ID of the object reference (OBJ_REF_NAME): the same ID as
+              in test_xyzAppLayer.cpp
+              For example: change OBJ_REF_NAME by XyzObject1
+
+            - The object location
+
+              For example: change
+
+                char szRefLocation[] = "corbaloc:iiop:localhost:10000/"OBJ_REF_NAME;
+
+                by
+
+                char szRefLocation[] = "corbaloc:iiop:10.0.2.15:20000/"OBJ_REF_NAME;
+
+              In fact, this is the location that is specified when we run
+              test_xyzAppLayer. 'localhost' is the address of the server
+              and '10000' is the IP port used by Corba for this server.
+
+            - The right interface
+
+              Replace the calls generated with the template by the actual
+              interface calls.
+
+After having built the projects we can test by:
+
+    - Starting the server
+
+        (release) test_xyz_server -ORBListenEndPoints iiop://localhost:10000
+        (debug) test_xyz_serverd -ORBListenEndPoints iiop://localhost:10000
+
+            The server will wait for requests.
+
+            Notice that iiop is the same as the one set in client
+            application.
+
+    - Starting the client
+
+        (release) test_xyz_client
+        (debug) test_xyz_clientd

@@ -1,0 +1,12 @@
+xyz
+==================================
+
+    This layer allows us to transform a dynamic library as a
+    plugin. The library must include the abstract class corresponding
+    to the interface of the plugin.
+
+    Just follow integration_examples:
+
+        - ace_plugin_example.h
+        - ace_plugin_example.cpp
+        - ace_plugin_test_example.cpp

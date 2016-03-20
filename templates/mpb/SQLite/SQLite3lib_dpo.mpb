@@ -1,0 +1,14 @@
+project {
+  includes += $(SQLITE_ROOT)/include
+  libpaths += $(SQLITE_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += SQLite3libd
+    Release::lit_libs += SQLite3lib
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += SQLite3lib
+    // Release::lit_libs += SQLite3lib
+    lit_libs += SQLite3lib
+  }
+}

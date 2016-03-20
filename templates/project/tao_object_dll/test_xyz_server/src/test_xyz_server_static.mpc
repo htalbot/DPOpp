@@ -1,0 +1,5 @@
+project: test_xyz_server_ex, test_xyz_server_fit_static {
+
+    exename = test_xyz_server_static
+
+}

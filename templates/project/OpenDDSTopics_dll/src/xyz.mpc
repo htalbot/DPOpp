@@ -1,0 +1,11 @@
+project: dcps, xyz_ex {
+
+    idlflags     += -I$(TAO_ROOT)/orbsvcs \
+                        -Wb,export_macro=XYZ_Export \
+                        -Wb,export_include=XYZ_Export.h
+    dcps_ts_flags += --export=XYZ_Export
+
+    TypeSupport_Files {
+        xyz.idl
+    }
+}

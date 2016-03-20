@@ -1,0 +1,78 @@
+xyz
+==================================================================
+
+Instructions for building xyz as a corba client.
+------------------------------------------------------------------
+
+    - Implement application
+
+        - Open xyz/src/xyzAppLayer.h
+
+            Apply steps indicated in file "integration_examples/AppLayer_TAO_client.h".
+
+        - Open xyz/src/xyzAppLayer.cpp
+
+            Apply steps indicated in file "integration_examples/AppLayer_TAO_client.cpp".
+
+        - Open xyz/src/xyz.cpp
+
+            Adapt main function from "integration_examples/main_tao.cpp".
+
+        - Build application
+
+
+    - Run
+
+        - Starting the server
+
+            Depending of the server, start it.
+
+            (release) <server> -ORBListenEndPoints iiop://localhost:10000
+            (debug) <server>d -ORBListenEndPoints iiop://localhost:10000
+
+                The server will wait for requests.
+
+                Notice that iiop is the same as the one set in client
+                application.
+
+        - Starting the application (corba client)
+
+            (release) xyz
+            (debug) xyzd
+
+
+
+
+A server becoming a server too.
+-------------------------------------------------
+
+    TO_DO...
+    #~ It is possible that a server needs to become a client of another
+    #~ server. In this case, use AppLayer_TAO_client_server.h.
+
+    #~ - Create a task for requesting values
+
+        #~ - Copy "integration_examples/AppLayer_TAO_client_server.h" to
+          #~ xyz/src/xyz_client_side.h.
+
+        #~ - Open xyz/src/xyz_client_side.h
+
+            #~ - Change obj_impl_ref_name by the corresponding object to refer to.
+
+            #~ - Change HOST:PORT by the right ip:port
+
+            #~ - Adjust object calls according to the interface
+
+    #~ - Integrate the new task
+
+        #~ - open xyz/src/xyzAppLayer.cpp
+
+            #~ - #include xyz_client_side.h"
+              #~ (after #include "xyzAppLayer.h")
+
+            #~ - Before the call to "tao_layer_->run()", write
+
+                #~ Xyz_ClientSide cs;
+                #~ cs.tao_layer(tao_layer_);
+                #~ cs.activate();
+

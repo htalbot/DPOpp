@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:include schemaLocation="DPOProject.xsd"/>
+
+    <!--
+        DPOModules: list of modules associated with a product
+                    when this product is not dpo compliant
+    -->
+    <xs:complexType name="DPOModules">
+        <xs:sequence>
+            <xs:element name="ModuleName" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!--
+        DPORuntimeProduct: runtime product base.
+    -->
+    <xs:complexType name="DPORuntimeProduct">
+        <xs:sequence>
+            <xs:element name="Name" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Version" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Flavour" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        DPORuntimeProductCompliant: runtime product that is dpo compliant.
+    -->
+    <xs:complexType name="DPORuntimeProductCompliant">
+        <xs:complexContent>
+            <xs:extension base="DPORuntimeProduct">
+                <xs:sequence>
+                    <xs:element name="ProjectDependencies" type="DPOProjectDependencies" minOccurs="1" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!--
+        DPORuntimeProductNonCompliant: runtime product that is not dpo compliant.
+    -->
+    <xs:complexType name="DPORuntimeProductNonCompliant">
+        <xs:complexContent>
+            <xs:extension base="DPORuntimeProduct">
+                <xs:sequence>
+                    <xs:element name="Modules" type="DPOModules" minOccurs="1" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <!--
+        DPORuntimeProductCompliantSeq: sequence of DPORuntimeProductCompliant
+    -->
+    <xs:complexType name="DPORuntimeProductCompliantSeq">
+        <xs:sequence>
+            <xs:element name="ProductCompliant" type="DPORuntimeProductCompliant" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        DPORuntimeProductNonCompliantSeq: sequence of DPORuntimeProductNonCompliant
+    -->
+    <xs:complexType name="DPORuntimeProductNonCompliantSeq">
+        <xs:sequence>
+            <xs:element name="ProductNonCompliant" type="DPORuntimeProductNonCompliant" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        DPORuntime: runtime elements
+    -->
+    <xs:complexType name="DPORuntime">
+        <xs:sequence>
+            <xs:element name="RuntimeProductCompliantSeq" type="DPORuntimeProductCompliantSeq" minOccurs="1" maxOccurs="1"/> <!-- when dependency is dpo compliant -->
+            <xs:element name="RuntimeProductNonCompliantSeq" type="DPORuntimeProductNonCompliantSeq" minOccurs="1" maxOccurs="1"/> <!-- when dependency is dpo compliant -->
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!-- ***** Non DPO compliant ***** -->
+
+    <!--
+        DPONonCompliantLib: Libs when a product is not DPO compliant
+    -->
+    <xs:complexType name="DPONonCompliantLib">
+        <xs:sequence>
+            <xs:element name="Lib_id" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="MPB" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="StaticDebugLib" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="StaticReleaseLib" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="DynamicDebugLib" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="DynamicReleaseLib" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="DynamicDebugDLL" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="DynamicReleaseDLL" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Plugin" type="BooleanValues" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        DPOMPCNonCompliantLibSeq: sequence of DPOMPCNonCompliantLib
+    -->
+    <xs:complexType name="DPONonCompliantLibSeq">
+        <xs:sequence>
+            <xs:element name="NonCompliantLib" type="DPONonCompliantLib" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+        - When a product is 'dpo compliant' its value is 1 else 0.
+        - When a product is DPO compliant(value == 1), no more information is
+          needed to work with DPO.
+        - When a product is not 'dpo compliant' (value == 0), we need to know if
+          if the associated modules has been built as static and/or as dynamic
+          as well as Debug or Release.
+          Also, for non MPC compliant modules, we need to create an MPB
+          containing the associated module with it's carateristics according
+          to Static/Dynamic and Debug/Release status.
+          It's easier to mix static and dynamic library depedencies in a project.
+    -->
+    <xs:complexType name="DPOCompliantProduct">
+        <xs:sequence minOccurs="1" maxOccurs="1">
+            <xs:element name="Value" type="BooleanValues" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="NonCompliantLibSeq" type="DPONonCompliantLibSeq" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!--
+        DPOProduct: product definition
+    -->
+    <xs:complexType name="DPOProduct">
+        <xs:sequence>
+            <xs:element name="Name" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Version" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Flavour" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="DPOCompliant" type="DPOCompliantProduct" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="Runtime" type="DPORuntime" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="MPCIncludes" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="FreezeDirectory" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="Product" type="DPOProduct">
+    </xs:element>
+
+</xs:schema>

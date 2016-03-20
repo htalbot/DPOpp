@@ -1,0 +1,61 @@
+xyz
+=========================================================
+
+Instructions for building xyz as a corba object with TAO
+---------------------------------------------------------
+
+    - Implement the object
+
+        - Open xyz/include/xyz/related_object_i.h
+
+                - Adapt object interface according to the Corba interface.
+
+        - Open xyz/src/related_object_i.cpp
+
+                - Adapt object implementation according to the Corba interface.
+
+        - Build library
+
+
+    - Implement test application (server)
+
+        - Open xyz/test_xyz/test_xyzAppLayer.cpp
+
+            - Define OBJ_ID_REF that is used to access the object from outside
+              the server.
+
+        - Build server application
+
+
+    - Implement test application (client)
+
+        - Open xyz/test_xyz_client/test_xyz_clientAppLayer.cpp
+
+            - Define OBJ_ID_REF that refers to the object to be used.
+
+            - Replace HOST:PORT by values corresponding to
+              the ones passed to server.
+
+            - Use the object according to the interface.
+
+        - Build client application
+
+
+    - Run
+
+        - Starting the server
+
+            (release) xyz -ORBListenEndPoints iiop://localhost:10000
+            (debug) xyzd -ORBListenEndPoints iiop://localhost:10000
+
+                The server will wait for requests.
+
+                Notice that iiop is the same as the one set in client
+                application.
+
+        - Starting the client
+
+            (release) test_xyz_client
+            (debug) test_xyz_clientd
+
+

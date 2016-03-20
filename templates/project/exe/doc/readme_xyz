@@ -1,0 +1,13 @@
+Template exe
+------------
+
+DPO tends to use at least two source files for executables. The first one
+being xyz.cpp and the second one being xyzAppLayer.cpp.
+
+xyz.cpp contains bootstrap of application while xyzAppLayer.cpp contains
+everything related to the application itself.
+
+This is only one approach among many others...
+
+After applying modifications according to the needs, this project
+just have to be built and tested by launching it.

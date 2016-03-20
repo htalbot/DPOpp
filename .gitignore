@@ -1,0 +1,27 @@
+dpo/core/tools/scripts/new_project.log
+*.sdf
+*.sln
+*.suo
+*.ipch
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.vcproj
+*.opensdf
+mru_products
+new_project.log
+run/
+/**/Release/**/*
+/**/Debug/**/*
+# ***** External1 *****
+!*xternal1*.lib
+!*xternal1*.dll
+!*xternal1*.exe
+!*xternal1*.vcxproj
+!*xternal1*.sln
+# ***** External2 *****
+!*xternal2*.lib
+!*xternal2*.dll
+!*xternal2*.exe
+!*xternal2*.vcxproj
+!*xternal2*.sln

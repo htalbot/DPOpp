@@ -1,0 +1,7 @@
+project {
+  includes += $(LIBMODBUS_ROOT)/include
+  includes += $(LIBMODBUS_ROOT)/include/libmodbus
+  libpaths += $(LIBMODBUS_ROOT)/lib
+
+  lit_libs   += libmodbus-5
+}

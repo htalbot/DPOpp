@@ -1,0 +1,282 @@
+xyz
+=================================================
+
+Instructions for building xyz as opendds publisher/subscriber:
+--------------------------------------------------------------
+
+    - Edit OpenDDS layer
+
+        - Open demo_path/xyz/include/xyz/xyzOpenDDSLayer.h
+
+            - Uncomment AS_PUBLISHER and/or AS_SUBSCRIBER
+
+            - Define <topic_name>, <writer_name>, <listenner_name>, <reader_name>
+
+    - Edit application layer
+
+        - Open demo_path/xyz/src/xyzAppLayer.h
+          (xyz.h if xyz is a library)
+          (xyz_i.h if xyz is a Corba object)
+
+            - Apply steps indicated in file "integration_examples/AppLayer_openDDS.h".
+              (Declare generate_topic() if xyz publishes)
+              (Declare receive_topic() if xyz subscribes)
+
+            - If xyz is a library, xyzAppLayer becomes xyz.
+
+            - If xyz is a Corba object implementation,
+
+                - xyzAppLayer becomes xyz_i.
+
+                - You must be sure that tao interface is implemented as
+                  declared.
+
+        - Open demo_path/xyz/src/xyzAppLayer.cpp
+          (xyz.cpp if xyz is a library)
+          (xyz_i.cpp if xyz is a Corba object)
+
+            - Apply steps indicated in file "integration_examples/AppLayer_openDDS.cpp".
+
+            - If xyz is a library, xyzAppLayer becomes xyz.
+
+            - If xyz is a Corba object implementation,
+
+                - xyzAppLayer becomes xyz_i.
+
+                - You must be sure that tao interface is implemented as
+                  declared.
+
+            - Call generic_topics somewhere.
+
+    - Edit main
+
+        If xyz is an executable
+
+            - Open demo_path/xyz/src/xyz.cpp and change as:
+
+                Adapt main function from "integration_examples/main_opendds.cpp".
+
+        if xyz is a library
+
+            - Edit test application
+
+                - Open demo_path/xyz/test_xyz/test_xyzAppLayer.cpp and change as:
+
+                    Here, at execution time, we will not pass parameters to the test
+                    application. We will integrate parameters in the code.
+
+                    - Add:
+
+                        #include "ace/ARGV.h"
+
+                    - Adapt run() function from "integration_examples/main_opendds.cpp".
+
+                        Something like:
+                        {
+                            printf("***** test_xyz (%s) *****\n\n", XYZ_DebugFlag);
+
+                            int major, minor, patch;
+                            xyz_get_version(major, minor, patch);
+                            printf("xyz version: %d.%d.%d\n", major, minor, patch);
+
+                            xyzOpenDDSLayer<xyz> dds_layer;
+                            xyz obj(&dds_layer, 10);
+
+                            obj.show();
+
+                            ACE_ARGV_T<ACE_TCHAR> args;
+                            args.add(ACE_TEXT("-DCPSConfigFile"));
+                            //args.add(ACE_TEXT("/home/hubert/Demo/xyz/etc/xyz/rtps.ini"));               // <--
+                            //args.add(ACE_TEXT("C:/Demo/xyz/etc/xyz/rtps.ini"));
+
+                            int domain_id(11);
+                            if ( dds_layer.init_DDS(args.argc(), args.argv(),
+                                                    domain_id) )
+                            {
+                                // Only proceed if there have been no errors
+                                ACE_DEBUG((LM_DEBUG, "Begin...\n"));
+
+                                // Create the application level (which connects itself to the abstraction layer)
+
+                        //        //*********************//
+                        //        //*** Publishing... ***//                                                      // <<-
+                        //        //*********************//
+                        //        // Wait before publishing
+                        //        //int nSec(2);
+                        //        //ACE_DEBUG((LM_DEBUG, "Wait before publishing (%d sec)...\n", nSec));
+                        //        //ACE_OS::sleep(nSec);
+                        //        // Loop sleeping and creating relatedTopic
+                        //        for (int diff_cnt = 0; diff_cnt < 600; ++diff_cnt)
+                        //        {
+                        //            ACE_DEBUG((LM_DEBUG, "sending topic: %d\n", diff_cnt));
+                        //            if ( ! obj.generate_topic())
+                        //            {
+                        //                ACE_ERROR((LM_ERROR, ACE_TEXT("Error - failed to generate topic\n")));
+                        //            }
+                        //            ACE_OS::sleep(1);
+                        //        }
+
+
+                        //        //**********************//
+                        //        //*** Subscribing... ***//                                                     // <<-
+                        //        //**********************//
+                        //        ACE_DEBUG((LM_DEBUG, "Waiting...\n"));
+                        //        ACE_OS::sleep(600);
+
+                                // Clean up DDS before finishing.
+                                dds_layer.shutdown_DDS();
+                            }
+                            else
+                            {
+                                ACE_ERROR((LM_ERROR, ACE_TEXT("ERROR: Initialization of DDS failed!\n")));
+                            }
+
+                            return true;
+                        }
+
+                    Change the ini file path and name by the right one.
+                    Uncomment Publishing or subscribing
+
+        If xyz is a Corba object,
+
+            - Open demo_path/xyz/test_xyz/test_xyzAppLayer.cpp and change as:
+
+                Here, at execution time, we will not pass DCPS parameters to the test
+                application. We will integrate parameters in the code.
+
+                - Add:
+
+                    #include "ace/ARGV.h"
+
+                - Adapt run() function with something like:
+
+                    {
+                        xyzOpenDDSLayer<xyz_i> dds_layer;
+                        xyz_i obj_impl(&dds_layer);
+
+                        ACE_ARGV_T<ACE_TCHAR> args;
+                        args.add(ACE_TEXT("-DCPSConfigFile"));
+                        //args.add(ACE_TEXT("/home/hubert/Demo/xyz/etc/xyz/rtps.ini"));               // <--
+                        //args.add(ACE_TEXT("C:/Demo/xyz/etc/xyz/rtps.ini"));
+
+                        int domain_id(11);
+                        if ( dds_layer.init_DDS(args.argc(), args.argv(),
+                                                domain_id) )
+                        {
+                            std::string strSrc;
+                            try
+                            {
+                                #if RESOLVE_WITH == IORTABLE
+                                    strSrc = "IORTable";
+                                    tao_layer_->register_with_ior_table<
+                                                        xyz_i,
+                                                        IDemo>
+                                                    (
+                                                        &obj_impl,
+                                                        "obj_impl_in_AOT",      // <-- object id in POA
+                                                        "xyz"     // <-- reference id for external app
+                                                    );
+                                #endif // IORTABLE
+
+                                #if RESOLVE_WITH == NAMING_SERVICE
+                                    strSrc = "Naming Service";
+                                    tao_layer_->register_with_naming_service<
+                                                        xyz_i,
+                                                        IDemo>
+                                                    (
+                                                        &obj_impl,
+                                                        "obj_impl_in_AOT",      // <-- object id in POA
+                                                        "xyz"     // <-- reference id for external app
+                                                    );
+                                #endif // NAMING_SERVICE
+                            }
+                            catch(...)
+                            {
+                                ACE_DEBUG((LM_ERROR,
+                                            "failed to register with %s\n",
+                                            strSrc.c_str()));
+                                tao_layer_->fini();
+                                return false;
+                            }
+
+                            ACE_DEBUG((LM_INFO,
+                                         "Server started, waiting for requests...\n\n",
+                                         strSrc.c_str()));
+
+                            tao_layer_->run();
+
+                            dds_layer.shutdown_DDS();
+                        }
+
+                        return true;
+                    }
+
+                Change the ini file path and name by the right one.
+
+    - Build application
+
+    - Run
+
+        - With DCPSInfoRepo
+
+            - Update etc/xyz/rtps.ini and choose
+
+                DiscoveryConfig=dcpsinforepo
+
+            - Run the DCPSInfoRepo server
+
+                DCPSInfoRepo -ORBListenEndPoints iiop://localhost:12345
+
+        - With RTPS
+
+            - Update etc/xyz/rtps.ini and choose
+
+                DiscoveryConfig=DEFAULT_RTPS
+
+        - If xyz is a publisher
+
+            - Run the publisher
+
+                (Windows)
+                    (debug) xyzd -DCPSConfigFile %XYZ_ROOT%/etc/xyz/rtps.ini
+                    (release) xyz -DCPSConfigFile %XYZ_ROOT%/etc/xyz/rtps.ini
+
+                (Linux)
+                    xyz -DCPSConfigFile $XYZ_ROOT/etc/xyz/rtps.ini
+
+                (use test_xyz if xyz is a library)
+
+            - Run a subscriber application
+
+                (Windows) <subscriber> -DCPSConfigFile %XYZ_ROOT%/etc/xyz/rtps.ini
+                (Linux) <subscriber> -DCPSConfigFile $XYZ_ROOT/etc/xyz/rtps.ini
+
+        - If xyz is a subscriber
+
+            - Run the publisher application
+
+                (Windows) <publisher> -DCPSConfigFile %XYZ_ROOT%/etc/xyz/rtps.ini
+                (Linux) <publisher> -DCPSConfigFile $XYZ_ROOT/etc/xyz/rtps.ini
+
+            - Run the subscriber
+
+                (Windows)
+                    (debug) xyzd -DCPSConfigFile %XYZ_ROOT%/etc/xyz/rtps.ini
+                    (release) xyz -DCPSConfigFile %XYZ_ROOT%/etc/xyz/rtps.ini
+
+                (Linux) xyz -DCPSConfigFile $XYZ_ROOT/etc/xyz/rtps.ini
+
+                (use test_xyz if xyz is a library)
+
+
+Note
+-------------------------------------------------
+
+    We can avoid to pass arguments to the application...
+
+    ACE_ARGV_T<ACE_TCHAR> args;
+    args.add(ACE_TEXT("-DCPSConfigFile"));
+    // Get <configuration_path> value by configuration...
+    args.add(ACE_TEXT("<configuration_path>/rtps.ini"));
+
+

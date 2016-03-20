@@ -1,0 +1,10 @@
+
+module XYZ_ns
+{
+    interface Xyz
+    {
+        long get();
+
+        // TO_DO: sample of basics syntaxes
+    };
+};

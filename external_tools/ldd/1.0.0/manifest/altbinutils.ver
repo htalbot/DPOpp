@@ -1,0 +1,26 @@
+TODO: write short description here for 'altbinutils'
+
+dsm-version: 0.5.0-pw32
+dsm-name: altbinutils-pe
+dsm-file-version: 1.0
+dsm-author: Paul Sokolovsky
+type: binary
+
+name: altbinutils-pe
+version: 1.0
+short-description: \
+  Suite of utilities useful to deal with PE (win32) executables.
+long-description: \
+  Includes: 1) pexports - utility to create .def file from a dll; 2) \
+  ldd-win32 - ldd workalike for win32 (utility to trace shared library \
+  dependencies of an executable); 3) a2dll - script to convert static \
+  library to DLL; 4) checkdll - utility to check loadability and \
+  relocatability of a DLL.
+author: Paul Sokolovsky
+author: Anders Norlander <anorland@hem2.passagen.se>
+web-site: http://mingwrep.sourceforge.net
+
+maintainer: Paul Sokolovsky
+maintainer-email: pfalcon@users.sourceforge.net
+
+zip: altbinutils-pe-1.0.zip

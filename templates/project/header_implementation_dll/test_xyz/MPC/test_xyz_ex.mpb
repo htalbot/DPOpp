@@ -1,0 +1,64 @@
+project : test_xyz_dependencies {
+
+    version =
+
+    exename = test_xyz
+
+    includes += $(TEST_XYZ_PRJ_ROOT)/include
+    exeout = $(TEST_XYZ_PRJ_ROOT)/bin/$(ConfigurationName)
+
+    specific(prop:microsoft) {
+        Debug::runtime_library = MultiThreadedDebugDLL
+        Release::runtime_library = MultiThreadedDLL
+        intermediate_dir = ../build/$(ConfigurationName)
+        use_exe_modifier = 1
+        //ExceptionHandling = Async  // We manage exception by ourselves
+        //DisableSpecificWarnings += 4251   // C4251 can be ignored if you are
+                                            // deriving from a type in the
+                                            // Standard C++ Library, compiling
+                                            // a debug release (/MTd) and where
+                                            // the compiler error message refers
+                                            /// to _Container_base.
+    }
+
+    specific(!vc9, !vc8, !vc7, !vc6, !gnuace, !make) {
+        // Before VC10, 'ConfigurationName' was used for configurations (Debug/Release).
+        // In VC10, 'ConfigurationName' is still supported but when we use it for outdir, it doesn't work.
+        // However, 'ConfigurationName' works elsewhere than with outdir.
+        // We use 'Configuration' for versions greater than VC9 for outdir only.
+        exeout = $(TEST_XYZ_PRJ_ROOT)/bin/$(Configuration)
+        intermediate_dir = ../build/$(Configuration)
+    }
+
+    specific(prop:microsoft) {
+        postbuild += del ..\bin\$(ConfigurationName)\$(ProjectName)_* 2>nul
+        postbuild += type nul > ..\bin\$(ConfigurationName)\$(ProjectName)_$(PlatformName)_$(ProcessorArchitecture)
+        postbuild += call postbuild.pl
+    } else {
+        postbuild += ./postbuild.pl
+    }
+
+
+    Header_Files {
+        ../include/test_xyz/*
+        *.h
+    }
+
+    Documentation_Files {
+        ../doc/*
+    }
+
+    Define_Custom(Configuration) {
+    }
+
+    Configuration_Files {
+        ../etc/*
+    }
+
+    Define_Custom(Integration_Examples) {
+    }
+
+    Integration_Examples_Files {
+        ../integration_examples/*
+    }
+}

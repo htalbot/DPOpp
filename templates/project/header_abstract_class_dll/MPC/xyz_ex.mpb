@@ -1,0 +1,58 @@
+project : xyz_dependencies {
+
+    version =
+
+    sharedname = xyz
+    dynamicflags = XYZ_BUILD_DLL
+
+    includes += $(XYZ_PRJ_ROOT)/include
+    dllout = $(XYZ_PRJ_ROOT)/lib/$(ConfigurationName)
+    libout = $(XYZ_PRJ_ROOT)/lib/$(ConfigurationName)
+
+    specific(prop:microsoft) {
+        Debug::runtime_library = MultiThreadedDebugDLL
+        Release::runtime_library = MultiThreadedDLL
+        intermediate_dir = ../build/$(ConfigurationName)
+        //ExceptionHandling = Async
+    }
+
+    specific(!vc9, !vc8, !vc7, !vc6, !gnuace, !make) {
+        // Before VC10, 'ConfigurationName' was used for configurations (Debug/Release).
+        // In VC10, 'ConfigurationName' is still supported but when used for 'Output Directory' and 'Intermediate Directory', it doesn't work anymore.
+        // We use 'Configuration' for versions greater than VC9 for 'Output Directory' and 'Intermediate Directory'.
+        dllout = $(XYZ_PRJ_ROOT)/lib/$(Configuration)
+        libout = $(XYZ_PRJ_ROOT)/lib/$(Configuration)
+        intermediate_dir = ../build/$(Configuration)
+    }
+
+    specific(prop:microsoft) {
+        // Don't need this pseudo lib
+        postbuild += rmdir /S /Q ..\lib\$(ConfigurationName) 2>nul
+    } else {
+        // TO_DO: linux
+    }
+
+
+    Header_Files {
+        ../include/xyz/*
+        *.h
+    }
+
+    Documentation_Files {
+        ../doc/*
+    }
+
+    Define_Custom(Configuration) {
+    }
+
+    Configuration_Files {
+        ../etc/*
+    }
+
+    Define_Custom(Integration_Examples) {
+    }
+
+    Integration_Examples_Files {
+        ../integration_examples/*
+    }
+}
