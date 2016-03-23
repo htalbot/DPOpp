@@ -3172,6 +3172,7 @@ sub remove_working_project_dependencies
     {
         @{$self->{working_project}->{dependencies_when_dynamic}} = grep { "$_->{name}-$_->{target_version}" ne "$x->{name}-$x->{target_version}" } @{$self->{working_project}->{dependencies_when_dynamic}};
         @{$self->{working_project}->{dependencies_when_static}} = grep { "$_->{name}-$_->{target_version}" ne "$x->{name}-$x->{target_version}" } @{$self->{working_project}->{dependencies_when_static}};
+        @{$self->{loaded_projects}} = grep { "$_->{name}-$_->{version}" ne "$x->{name}-$x->{version}" } @{$self->{loaded_projects}};
     }
 
     $self->save_working_project(0);
