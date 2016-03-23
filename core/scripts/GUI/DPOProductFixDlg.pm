@@ -43,12 +43,15 @@ sub new {
     $self = $self->SUPER::new( $parent, $id, $title, $pos, $size, $style, $name );
     $self->{notebook_fix} = Wx::Notebook->new($self, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
     $self->{notebook_fix_pane_module_replacement} = Wx::Panel->new($self->{notebook_fix}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
-    $self->{label_info} = Wx::StaticText->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("Specify which external project you want to migrate to use with this product.\nFor example, you need to migrate from ACE-6.3.0 to ACE-6.3.1.\n\nIf you want to change version of a project of the product you are working on,\nselect the desired project as the working project and change version \nfrom the working project space."), wxDefaultPosition, wxDefaultSize, );
+    $self->{label_info} = Wx::StaticText->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("Specify which external project you want to migrate to use with this product.\nFor example, you need to migrate from ACE-6.3.0 to ACE-6.3.1.\n\nIf you want to change version of a project of the product you are working on,\nselect the desired project as the working project and change version \nfrom the working project space.\n\nFor a non DPO compliant project, write product name (not required for DPO \ncompliant project)."), wxDefaultPosition, wxDefaultSize, );
     $self->{text_ctrl_project_name} = Wx::TextCtrl->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
     $self->{sizer_47_staticbox} = Wx::StaticBox->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("Project name") );
     $self->{text_ctrl_project_version} = Wx::TextCtrl->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
     $self->{sizer_48_staticbox} = Wx::StaticBox->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("Project version") );
     $self->{sizer_2_staticbox} = Wx::StaticBox->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("Project to migrate to") );
+    $self->{label_3} = Wx::StaticText->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("  (not required when project is DPO compliant)"), wxDefaultPosition, wxDefaultSize, );
+    $self->{text_ctrl_non_compliant_project_product_name} = Wx::TextCtrl->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, );
+    $self->{sizer_165_staticbox} = Wx::StaticBox->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("Non DPO compliant product name") );
     $self->{text_ctrl_msg} = Wx::TextCtrl->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
     $self->{sizer_4_staticbox} = Wx::StaticBox->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("Message") );
     $self->{button_change} = Wx::Button->new($self->{notebook_fix_pane_module_replacement}, wxID_ANY, _T("Change"));
@@ -58,6 +61,7 @@ sub new {
     $self->__do_layout();
 
     Wx::Event::EVT_TEXT($self, $self->{text_ctrl_project_name}->GetId, \&on_text_ctrl_project_name);
+    Wx::Event::EVT_TEXT($self, $self->{text_ctrl_non_compliant_project_product_name}->GetId, \&on_text_ctrl_product_name);
     Wx::Event::EVT_BUTTON($self, $self->{button_change}->GetId, \&on_button_change);
     Wx::Event::EVT_BUTTON($self, $self->{button_cancel}->GetId, \&on_button_cancel);
 
@@ -77,6 +81,7 @@ sub __set_properties {
     my $self = shift;
     # begin wxGlade: DPOProductFixDlg::__set_properties
     $self->SetTitle(_T("Fix"));
+    $self->{text_ctrl_non_compliant_project_product_name}->SetMinSize(Wx::Size->new(200, -1));
     # end wxGlade
 }
 
@@ -89,6 +94,9 @@ sub __do_layout {
     $self->{sizer_58} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_4_staticbox}->Lower();
     $self->{sizer_4} = Wx::StaticBoxSizer->new($self->{sizer_4_staticbox}, wxHORIZONTAL);
+    $self->{sizer_145} = Wx::BoxSizer->new(wxVERTICAL);
+    $self->{sizer_165_staticbox}->Lower();
+    $self->{sizer_165} = Wx::StaticBoxSizer->new($self->{sizer_165_staticbox}, wxVERTICAL);
     $self->{sizer_2_staticbox}->Lower();
     $self->{sizer_2} = Wx::StaticBoxSizer->new($self->{sizer_2_staticbox}, wxHORIZONTAL);
     $self->{sizer_48_staticbox}->Lower();
@@ -100,9 +108,13 @@ sub __do_layout {
     $self->{sizer_2}->Add($self->{sizer_47}, 1, wxTOP|wxEXPAND, 10);
     $self->{sizer_48}->Add($self->{text_ctrl_project_version}, 1, 0, 0);
     $self->{sizer_2}->Add($self->{sizer_48}, 1, wxLEFT|wxTOP, 10);
-    $self->{sizer_41}->Add($self->{sizer_2}, 0, wxALIGN_CENTER_HORIZONTAL, 0);
+    $self->{sizer_145}->Add($self->{sizer_2}, 0, wxALIGN_CENTER_HORIZONTAL, 0);
+    $self->{sizer_165}->Add($self->{label_3}, 0, 0, 0);
+    $self->{sizer_165}->Add($self->{text_ctrl_non_compliant_project_product_name}, 1, wxEXPAND, 0);
+    $self->{sizer_145}->Add($self->{sizer_165}, 1, wxTOP|wxALIGN_CENTER_HORIZONTAL, 10);
+    $self->{sizer_41}->Add($self->{sizer_145}, 1, wxEXPAND, 0);
     $self->{sizer_4}->Add($self->{text_ctrl_msg}, 1, 0, 0);
-    $self->{sizer_41}->Add($self->{sizer_4}, 1, wxEXPAND, 0);
+    $self->{sizer_41}->Add($self->{sizer_4}, 0, wxEXPAND, 0);
     $self->{sizer_58}->Add($self->{button_change}, 0, 0, 0);
     $self->{sizer_58}->Add($self->{button_cancel}, 0, wxLEFT, 5);
     $self->{sizer_41}->Add($self->{sizer_58}, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 10);
@@ -118,44 +130,54 @@ sub __do_layout {
 
 sub read_version
 {
-    my ($self) = @_;
+    my ($self, $project_product) = @_;
 
-    my $project_name = $self->{text_ctrl_project_name}->GetValue();
-    if ($project_name eq "")
+    if ($project_product eq "project")
     {
-        return;
-    }
-
-    my $env_var_id = uc($project_name) . "_PRJ_ROOT";
-    my $path = "\$($env_var_id)";
-    if (DPOEnvVars::expand_env_var(\$path))
-    {
-        if (-e "$path/DPOProject.xml")
+        my $project_name = $self->{text_ctrl_project_name}->GetValue();
+        if ($project_name eq "")
         {
-            my $major=0;
-            my $minor=0;
-            my $patch=0;
-            if (DPOProject::read_project_version($path,
-                                                \$major,
-                                                \$minor,
-                                                \$patch))
+            return;
+        }
+
+        my $env_var_id = uc($project_name) . "_PRJ_ROOT";
+        my $path = "\$($env_var_id)";
+        if (DPOEnvVars::expand_env_var(\$path))
+        {
+            if (-e "$path/DPOProject.xml")
             {
-                $self->{text_ctrl_project_version}->SetValue("$major.$minor.$patch");
-                $self->{button_change}->Enable(1);
-                $self->{button_change}->SetFocus();
-                $self->{text_ctrl_msg}->SetValue("");
-            }
-            else
-            {
-                $self->{text_ctrl_msg}->SetValue("Can't read version of $project_name");
-                return;
+                my $major=0;
+                my $minor=0;
+                my $patch=0;
+                if (DPOProject::read_project_version($path,
+                                                    \$major,
+                                                    \$minor,
+                                                    \$patch))
+                {
+                    $self->{text_ctrl_project_version}->SetValue("$major.$minor.$patch");
+                    $self->{button_change}->Enable(1);
+                    $self->{button_change}->SetFocus();
+                    $self->{text_ctrl_msg}->SetValue("");
+                }
+                else
+                {
+                    $self->{text_ctrl_msg}->SetValue("Can't read version of $project_name");
+                    return;
+                }
             }
         }
     }
     else
     {
-        $env_var_id = uc($project_name) . "_ROOT";
-        $path = "\$($env_var_id)";
+        # Not a project, get version of the product
+        my $product_name = $self->{text_ctrl_non_compliant_project_product_name}->GetValue();
+
+        my $env_var_id = uc($product_name) . "_ROOT";
+        #~ if ($project_name eq "OpenDDS_Dcps")
+        #~ {
+            #~ $env_var_id = "DDS_ROOT";
+        #~ }
+        my $path = "\$($env_var_id)";
         if (DPOEnvVars::expand_env_var(\$path))
         {
             my ($version) = $path =~ /.*\/(.*)/;
@@ -289,12 +311,30 @@ sub on_text_ctrl_project_name
     $self->{text_ctrl_project_version}->SetValue("");
     $self->{button_change}->Enable(0);
 
-    $self->read_version();
+    $self->read_version("project");
 
     return;
 
     # wxGlade: DPOProductFixDlg::on_text_ctrl_project_name <event_handler>
     warn "Event handler (on_text_ctrl_project_name) not implemented";
+    $event->Skip;
+    # end wxGlade
+}
+
+
+sub on_text_ctrl_product_name
+{
+    my ($self, $event) = @_;
+
+    $self->{text_ctrl_project_version}->SetValue("");
+    $self->{button_change}->Enable(0);
+
+    $self->read_version("product");
+
+    return;
+
+    # wxGlade: DPOProductFixDlg::on_text_ctrl_product_name <event_handler>
+    warn "Event handler (on_text_ctrl_product_name) not implemented";
     $event->Skip;
     # end wxGlade
 }
