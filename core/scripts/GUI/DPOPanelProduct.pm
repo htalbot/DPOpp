@@ -3172,12 +3172,66 @@ sub remove_working_project_dependencies
     {
         @{$self->{working_project}->{dependencies_when_dynamic}} = grep { "$_->{name}-$_->{target_version}" ne "$x->{name}-$x->{target_version}" } @{$self->{working_project}->{dependencies_when_dynamic}};
         @{$self->{working_project}->{dependencies_when_static}} = grep { "$_->{name}-$_->{target_version}" ne "$x->{name}-$x->{target_version}" } @{$self->{working_project}->{dependencies_when_static}};
-        @{$self->{loaded_projects}} = grep { "$_->{name}-$_->{version}" ne "$x->{name}-$x->{version}" } @{$self->{loaded_projects}};
+
+        if (!$self->more_than_one_ref($x, $self->{workspace_projects}))
+        {
+            @{$self->{loaded_projects}} = grep { "$_->{name}-$_->{version}" ne "$x->{name}-$x->{version}" } @{$self->{loaded_projects}};
+        }
     }
 
     $self->save_working_project(0);
 
     $self->fill_tree_working();
+}
+
+sub more_than_one_ref
+{
+    my ($self, $proj, $array, $count_ref) = @_;
+
+    if (!defined($count_ref))
+    {
+        $$count_ref = 0;
+    }
+
+    foreach my $x (@{$array})
+    {
+        if ($x->{name} eq $proj->{name}
+            && $x->{version} eq $proj->{version})
+        {
+            $$count_ref++;
+        }
+
+        if ($$count_ref > 1)
+        {
+            return 1;
+        }
+
+        my $project;
+        if ($self->get_project($x->{name}, \$project))
+        {
+            my @deps;
+            foreach my $dep (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}})
+            {
+                if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$dep->{name}-$dep->{version}"} @deps)
+                {
+                    push(@deps, $dep);
+                }
+            }
+
+            #~ my @deps = (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}});
+            if ($self->more_than_one_ref($proj, \@deps, $count_ref))
+            {
+                return 1;
+            }
+        }
+        else
+        {
+            DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$x->{name}]);
+            return 0;
+        }
+    }
+
+    return 0;
 }
 
 sub expand_working_project
