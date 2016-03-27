@@ -2109,6 +2109,7 @@ sub on_button_activate
     }
 
 # TO_DO...
+    Wx::MessageBox("The product will be closed", "", Wx::wxOK | Wx::wxICON_INFORMATION);
     my $product_closed = 0;
     $self->{frame}->{panel_product}->close_product();
     $product_closed = 1;
@@ -2120,37 +2121,6 @@ sub on_button_activate
     my @failures;
     foreach my $product_to_activate (@products_to_activate)
     {
-        #~ if (!$product_closed)
-        #~ {
-            #~ my ($product_name) = $product_to_activate =~ /(.*?)-/;
-            #~ if (defined($self->{frame}->{panel_product}->{this_product}->{name})
-                #~ && $product_name eq $self->{frame}->{panel_product}->{this_product}->{name})
-            #~ {
-                #~ my $rc = Wx::MessageBox(
-                            #~ "$product_name is the current working product.\n\n" .
-                            #~ "If you activate it from pool, the current working product\n" .
-                            #~ "will be closed\n\n" .
-                            #~ "Do you want to close $product_name and activate the pool version ?",
-                            #~ "Pool activation",
-                            #~ Wx::wxYES_NO | Wx::wxICON_QUESTION);
-                #~ if ($rc == Wx::wxYES)
-                #~ {
-                    #~ $self->{frame}->{panel_product}->close_product();
-                    #~ $product_closed = 1;
-                #~ }
-                #~ else
-                #~ {
-                    #~ next;
-                #~ }
-            #~ }
-        #~ }
-
-# TO_DO: always close product
-# TO_DO: product X depends on DDS-3.6.0, change DDS-3.8.0 ==> difficulties.
-#~ $self->{frame}->{panel_product}->close_product();
-#~ $product_closed = 1;
-
-
         foreach my $product (@{$self->{selected_products}})
         {
             if ("$product->{name}-$product->{version}-$product->{flavour}" eq $product_to_activate)
@@ -3792,7 +3762,11 @@ sub on_button_impact_load
             my ($product_name, $flavour) = $path =~ /.*\/(.*)\/(.*)/;
 
             my $impact_product = ImpactProduct->new($product_name, $flavour);
-            push(@{$self->{impact_products}}, $impact_product);
+
+            if (!List::MoreUtils::any {"$_->{product_name}-$_->{flavour}" eq "$impact_product->{product_name}-$impact_product->{flavour}"} @{$self->{impact_products}})
+            {
+                push(@{$self->{impact_products}}, $impact_product);
+            }
 
             my @impact_projects;
             $self->extract_projects_versions_from_versions_log($versions_log, $impact_product->{impact_projects});
@@ -3802,7 +3776,10 @@ sub on_button_impact_load
             my ($product_name, $flavour, $product_version) = $path =~ /.*\/(.*)\/(.*)\/(.*)/;
 
             my $impact_product = ImpactProduct->new($product_name, $flavour);
-            push(@{$self->{impact_products}}, $impact_product);
+            if (!List::MoreUtils::any {"$_->{product_name}-$_->{flavour}" eq "$impact_product->{product_name}-$impact_product->{flavour}"} @{$self->{impact_products}})
+            {
+                push(@{$self->{impact_products}}, $impact_product);
+            }
 
             my $dpoproduct_file = "$path/DPOProduct.xml";
             my $config_product = DPOProductConfig->new($dpoproduct_file);
