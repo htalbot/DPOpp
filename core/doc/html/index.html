@@ -7,7 +7,7 @@
    </head>
    <body>
    <p>Under construction...</p>
-<!-- 		<div id="menu">
+		<div id="menu">
 			<ul>
 				<li><a href="#INTRODUCTION">Introduction</li>
 					<ul>
@@ -26,7 +26,6 @@
 							<li><a href="#PROJECT">Project</li>
 							<li><a href="#PROJECT_TEMPLATE">Project template</li>
 							<li><a href="#PROJECT_LAYER">Project layer</li>
-							<li><a href="#PROJECT_DEFINITION">Project definition</li>
 							<li><a href="#PROJECT_GENERATION">Project generation</li>
 							<li><a href="#ENVIRONMENT_VARIABLES">Environment variables</li>
 						</ul>
@@ -40,10 +39,10 @@
 				<li><a href="#USAGE">Usage</a></li>
 				<ul>
 					<li><a href="#PREREQUISITES">Prerequisites</li>
-					<li><a href="#MINIMAL_STEPS">Minimal steps</li>
-				</ul>
-				<li><a href="#TUTORIAL">Tutorial</a></li>
-			</ul>
+<!-- 					<li><a href="#MINIMAL_STEPS">Minimal steps</li>
+ -->				</ul>
+<!-- 				<li><a href="#TUTORIAL">Tutorial</a></li>
+ -->			</ul>
 		</div>
 
 		<div id="corps">
@@ -150,6 +149,8 @@
 			            Conversely, a product not developped with DPO is said non DPO compliant. It's the case 
 			            of any existing libraries. To work with this type of products, DPO provides a tool to 
 			            migrate them into the DPO directory.</p>
+			            <p>Also, we talk about products that are MPC Compliant. That means that the product
+			            is built with the help of MPC directly like ACE/TAO/OpenDDS...</p>
 
 			        <h3 id="VERSION">Version</h3>
 
@@ -175,7 +176,7 @@
 							                        impact on compatibility.</li>
 							</ul>
 
-			        <h3 id="DEPENDENCY">ICITTE Dependency</h3>
+			        <h3 id="DEPENDENCY">Dependency</h3>
 
 			            <p>The notion of dependency between modules is an important concept in
 			            DPO.</p>
@@ -191,30 +192,6 @@
 			            <p>Allowing to work with different architectures, OS and compilers, DPO
 			            promotes sustainability.</p>
 
-			            <p>The choice of development tools plays an important role in the
-			            development of sustainable systems.
-			            Therefore, we will seek an approach where the tools are not an
-			            obstacle to the evolution of systems in terms of versatility.</p>
-
-			        <h3 id="PREFERENCES">Preferences</h3>
-
-			            <p>À revoir... All developers have their preferences. Not everyone can be satisfied
-			            by setting too strict standards. Also, sticking to tools that are too
-			            specialized or very advanced for certain handy tasks but not
-			            essential, can be limiting if the aim is the sustainability of
-			            systems. Developers should use tools in a way that the final product
-                        does not have a particular signature of this tool or that it will
-                        allow the transfer to another platform, another OS or another compiler.</p>
-
-			        <h3 id="PROJECT">Project</h3>
-
-			            <p>In DPO, a project maps to a module. A project is a set of files
-			            contained in a predefined directory structure. The files are source
-			            code distributed in 'src' and 'include' directories, configuration
-			            contained in 'etc' directory, documentation in 'doc' directory, etc. Each
-			            project has a test application when applicable. Furthermore, the
-			            root directory of a project contains scripts to help managing it.</p>
-
 			        <h3 id = "PROJECT_TEMPLATE">Project template</h3>
 
 			            <p>DPO provides some project templates. We can generate new project
@@ -229,7 +206,7 @@
 
 			            <p>With the exception of templates, which users have defined to be
 			            more efficient, a module is always a minimal library or executable.
-			            Additional features are appended to a module by the mean of
+			            Additional features can be appended to a module by the mean of
 			            layers.</p>
 
 			            <p>In contrast with wizards, layers bring out steps involved to
@@ -248,14 +225,6 @@
 			            <p>When a layer is used often, nothing prevents a user to define a new
 			            project template.</p>
 
-			        <h3 id="PROJECT_DEFINITION">Project definition</h3>
-
-			            <p>A project definition corresponds to MPC files (www.ociweb.com) where,
-			            among other things, we specify include and library paths of the
-			            library we want to use. This abstracts the tool with which we build
-			            the module. A project definition is the essence of a project
-			            notwithstanding the development tool used.</p>
-
 			        <h3 id="PROJECT_GENERATION">Project generation</h3>
 
 			            <p>Project generation mainly means creation of makefile,
@@ -269,43 +238,13 @@
 			            its dependency modules. A project definition defines dependencies in terms of
 			            environment variables. For example, instead of defining absolute
 			            paths, we use environment variables.</p>
+			            <p>This is an important feature of DPO. This is how DPO can deal with different
+			            versions of products efficiently.</p>
 
 
 			<h1 id="INSTALLATION">Installation</h1>
 
-			        See doc/DPO-install.txt
-
-			        <h2 id="NEW_TOOLCHAIN">New toolchain</h2>
-
-			            <p>When toolchain is added to DPO pool, copy 'dpo/tools/templates/thirdparty-project/
-			            dpo_set_newer_env_vars.pl' into the root directory of the toolchain.</p>
-
-			        <h2 id="INSTALL_ENV_VARS">Environment variables</h2>
-
-			            <h3>(Linux)</h3>
-
-			                <p>Copy 'dpo/tools/templates/user_config/the.dpo_env_vars' to ~/.dpo_env_vars.</p>
-
-			        <h2 id="THIRD_PARTY_PROJECT">Third party project</h2>
-
-						<ul>
-							<li>Create directory according to the version.</li>
-
-							<li>From there, create sub-directory 'include/project_name' (where
-							project_name is the name of the project) and copy all include files.</li>
-
-							<li>From there, create sub-directories 'bin' or 'lib' (or both when
-							relevant) and copy all libraries and executables.</li>
-
-							<li>Copy $DPO_ROOT/tools/templates/thirdparty-project/DPOConfig.xml in the
-							directory (named by version number).</li>
-
-							<li>Copy $DPO_ROOT/tools/scripts/dpo_set_this_env_var.pl in the same
-							directory.</li>
-
-							<li>Copy $DPO_ROOT/tools/scripts/dpo_impact.pl in the same directory.</li>
-							<li>Copy $DPO_ROOT/tools/scripts/dpo_update_config.pl in the same directory and run it.</li>
-						</ul>
+			        See INSTALL file from the root of the project.
 
 			<h1 id="USAGE">Usage</h1>
 
@@ -314,8 +253,10 @@
 			            To create a new project in Windows, it must be done on an NTFS
 			            partition. This is due to the Perl 'link' function used to
 			            create 'build' working directory.
+			            
+<p>...</p>			            
 
-			        <h2 id="MINIMAL_STEPS">Minimal steps</h2>
+<!-- 			        <h2 id="MINIMAL_STEPS">Minimal steps</h2>
 
 							<ul>
 
@@ -361,8 +302,7 @@
 			        <p>Several tutorials are available. See in dpo/doc/Tutorial.</p>
 
 			<br clear="all" /><br clear="all" />
-
-		</div>
  -->
+		</div>
 	</body>
 </html>
