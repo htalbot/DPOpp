@@ -133,8 +133,8 @@ sub get_non_compliant_associated_libs
     {
         if (!List::MoreUtils::any {$_ eq $lib_id->{id}} @$associated_mpbs_ref)
         {
-            if ($lib_id->{mpb_name} ne $self->{name}
-                && $lib_id->{level} == 1)
+            if ($lib_id->{mpb_name} ne $self->{name})
+                #~ && $lib_id->{level} == 1)
             {
                 my $project_name = $lib_id->{id};
                 if ($lib_id->{mpb_name} =~ /(.*)_dpo$/

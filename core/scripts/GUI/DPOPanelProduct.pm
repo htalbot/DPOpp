@@ -4862,7 +4862,7 @@ sub add_non_compliant_dep
                                         $mpb->{product_name},
                                         $mpb->{product_flavour},
                                         $mpb->{name},
-                                        $mpb->{path});
+                                        $mpb->{mpc_includes});
 
     my $project = DPOProject->new($mpb->{lib_id}, $product->{version}, $product->{version}, 4, $dpo_compliant); # type 4: determined next
 
