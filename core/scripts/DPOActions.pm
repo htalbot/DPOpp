@@ -3245,6 +3245,61 @@ sub freeze
 
         my $wait = Wx::BusyCursor->new();
 
+        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+        my $timestamp = sprintf ( "%04d-%02d-%02d %02d:%02d:%02d",
+                                        $year+1900,
+                                        $mon+1,
+                                        $mday,
+                                        $hour,
+                                        $min,
+                                        $sec);
+
+        # Update dpo_versions.log
+        my @last_product_version_block;
+        if (!$self->extract_projects_of_the_last_product_version($versions_log, \@last_product_version_block))
+        {
+            my $msg = "Can't extract last product version from $versions_log";
+            Wx::MessageBox($msg, "", Wx::wxOK | Wx::wxICON_ERROR);
+            DPOLog::report_msg(DPOEvents::FREEZE_FAILURE, ["$versions_log (can't extract last product version)"]);
+            return 0;
+        }
+
+        my @projects_to_keep_with_this_product;
+        my $dlg_choice = DPOProductFreezeChoiceDlg->new(
+                        \@projects_to_freeze,
+                        \@last_product_version_block,
+                        $self->{panel_product},
+                        $versions_log,
+                        $current_version,
+                        $new_product_version,
+                        $new_product_flavour,
+                        undef,
+                        -1,
+                        "",
+                        Wx::wxDefaultPosition,
+                        Wx::wxDefaultSize,
+                        Wx::wxDEFAULT_FRAME_STYLE|Wx::wxTAB_TRAVERSAL);
+        $dlg_choice->Centre();
+        my $rc = $dlg_choice->ShowModal();
+        $dlg_choice->Destroy();
+        if ($rc == Wx::wxID_OK)
+        {
+            # @last_product_version_block has been updated in a way that it
+            # contains the projects of the new product version.
+            if (!$self->add_new_product_version_entry($versions_log, $new_product_version, \@last_product_version_block, $timestamp))
+            {
+                my $msg = "Can't add new version entry into $versions_log";
+                Wx::MessageBox($msg, "", Wx::wxOK | Wx::wxICON_ERROR);
+                DPOLog::report_msg(DPOEvents::FREEZE_FAILURE, ["$versions_log (can't add new version entry)"]);
+                return 0;
+            }
+        }
+        else
+        {
+            DPOLog::report_msg(DPOEvents::FREEZING_CANCELLED, []);
+            return 0;
+        }
+
         my @fails;
         foreach my $project (@projects_to_freeze)
         {
@@ -3310,61 +3365,6 @@ sub freeze
         #~ {
             #~ DPOLog::report_msg(DPOEvents::FREEZING_COPY_OK, []);
         #~ }
-
-        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-        my $timestamp = sprintf ( "%04d-%02d-%02d %02d:%02d:%02d",
-                                        $year+1900,
-                                        $mon+1,
-                                        $mday,
-                                        $hour,
-                                        $min,
-                                        $sec);
-
-        # Update dpo_versions.log
-        my @last_product_version_block;
-        if (!$self->extract_projects_of_the_last_product_version($versions_log, \@last_product_version_block))
-        {
-            my $msg = "Can't extract last product version from $versions_log";
-            Wx::MessageBox($msg, "", Wx::wxOK | Wx::wxICON_ERROR);
-            DPOLog::report_msg(DPOEvents::FREEZE_FAILURE, ["$versions_log (can't extract last product version)"]);
-            return 0;
-        }
-
-        my @projects_to_keep_with_this_product;
-        my $dlg_choice = DPOProductFreezeChoiceDlg->new(
-                        \@projects_to_freeze,
-                        \@last_product_version_block,
-                        $self->{panel_product},
-                        $versions_log,
-                        $current_version,
-                        $new_product_version,
-                        $new_product_flavour,
-                        undef,
-                        -1,
-                        "",
-                        Wx::wxDefaultPosition,
-                        Wx::wxDefaultSize,
-                        Wx::wxDEFAULT_FRAME_STYLE|Wx::wxTAB_TRAVERSAL);
-        $dlg_choice->Centre();
-        my $rc = $dlg_choice->ShowModal();
-        $dlg_choice->Destroy();
-        if ($rc == Wx::wxID_OK)
-        {
-            # @last_product_version_block has been updated in a way that it
-            # contains the projects of the new product version.
-            if (!$self->add_new_product_version_entry($versions_log, $new_product_version, \@last_product_version_block, $timestamp))
-            {
-                my $msg = "Can't add new version entry into $versions_log";
-                Wx::MessageBox($msg, "", Wx::wxOK | Wx::wxICON_ERROR);
-                DPOLog::report_msg(DPOEvents::FREEZE_FAILURE, ["$versions_log (can't add new version entry)"]);
-                return 0;
-            }
-        }
-        else
-        {
-            DPOLog::report_msg(DPOEvents::FREEZING_CANCELLED, []);
-            return 0;
-        }
 
         # Update version of the product
         $self->{panel_product}->{this_product}->{version} = $new_product_version;

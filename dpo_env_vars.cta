@@ -1,0 +1,6 @@
+user: DPO_CORE_ROOT = C:\dev\dpo\core
+user: DPO_POOL_ROOT = C:\dev\dpo_pool-x86_64-windows
+user: DPO_TEMPLATES_ROOT = C:\dev\dpo\templates
+user: ACE_ROOT = %DPO_POOL_ROOT%\vc10\thirdparty\Vanderbilt\ACE\minimal_for_dpo\6.3.1
+user: MPC_ROOT = %ACE_ROOT%\MPC
+user: DPO_PRIVATE_TEMPLATES_ROOT = %DPO_POOL_ROOT%\vc10\thirdparty\htalbot\CPM\vanilla\templates4dpo;%DPO_POOL_ROOT%\vc10\criq\HardwareInterfaces\Spectro\vanilla\templates4dpo
