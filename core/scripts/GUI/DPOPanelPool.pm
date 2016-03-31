@@ -1903,9 +1903,7 @@ sub load_project_dependencies
                     return 0;
                 }
 
-                my $dpo_mpb = DPOMpb->new($new_project->{dpo_compliant}->{product_name},
-                                            $new_project->{dpo_compliant}->{product_flavour},
-                                            $new_project->{name}, # lib_id
+                my $dpo_mpb = DPOMpb->new($new_project->{name}, # lib_id
                                             $new_project->{dpo_compliant}->{mpb}, # mpb name
                                             $new_project->{dpo_compliant}->{mpc_includes});
 

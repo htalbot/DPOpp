@@ -1665,9 +1665,7 @@ sub load_project_dependencies
                     return 0;
                 }
 
-                my $dpo_mpb = DPOMpb->new($new_project->{dpo_compliant}->{product_name},
-                                            $new_project->{dpo_compliant}->{product_flavour},
-                                            $new_project->{name}, # lib_id
+                my $dpo_mpb = DPOMpb->new($new_project->{name}, # lib_id
                                             $new_project->{dpo_compliant}->{mpb}, # mpb name
                                             $new_project->{dpo_compliant}->{mpc_includes});
 
@@ -4407,8 +4405,8 @@ sub drag_copy
                 {
                     # Make project with mpb
                     my $dpo_compliant = DPOCompliant->new(0,
-                                                        $mpb->{product_name},
-                                                        $mpb->{product_flavour},
+                                                        $product->{name},
+                                                        $product->{flavour},
                                                         $mpb->{name},
                                                         $mpb->{mpc_includes});
 
@@ -4613,9 +4611,7 @@ sub select_mpbs_from_non_compliant_product
                     if ($token eq $mpb_name)
                     {
                         $found = 1;
-                        my $dpo_mpb = DPOMpb->new($product->{name},
-                                                    $product->{flavour},
-                                                    $non_compliant_lib->{lib_id},
+                        my $dpo_mpb = DPOMpb->new($non_compliant_lib->{lib_id},
                                                     $mpb_name,
                                                     $product->{mpc_includes});
                         push(@$mpbs_ref, $dpo_mpb);
@@ -4631,9 +4627,7 @@ sub select_mpbs_from_non_compliant_product
             {
                 if ($non_compliant_lib->{mpb_name} eq $mpb_name)
                 {
-                    my $dpo_mpb = DPOMpb->new($product->{name},
-                                                $product->{flavour},
-                                                $non_compliant_lib->{lib_id},
+                    my $dpo_mpb = DPOMpb->new($non_compliant_lib->{lib_id},
                                                 $mpb_name,
                                                 $product->{mpc_includes});
                     push(@$mpbs_ref, $dpo_mpb);
@@ -4851,16 +4845,14 @@ sub add_non_compliant_dep
 {
     my ($self, $target_project, $product, $dep_name, $mpb_name) = @_;
 
-    my $mpb = DPOMpb->new($product->{name},
-                            $product->{flavour},
-                            $dep_name,
+    my $mpb = DPOMpb->new($dep_name,
                             $mpb_name,
                             $product->{mpc_includes});
 
     # Make project dependency with mpb
     my $dpo_compliant = DPOCompliant->new(0,
-                                        $mpb->{product_name},
-                                        $mpb->{product_flavour},
+                                        $product->{name},
+                                        $product->{flavour},
                                         $mpb->{name},
                                         $mpb->{mpc_includes});
 

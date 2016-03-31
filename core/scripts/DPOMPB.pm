@@ -16,16 +16,12 @@ my @contain_no_libs;
 sub new
 {
     my ($class,
-        $product_name,
-        $product_flavour,
         $lib_id,
         $name,
         $mpc_includes) = @_;
 
     my $self =
     {
-        product_name => $product_name,
-        product_flavour => $product_flavour,
         lib_id => $lib_id,
         name => $name,
         mpc_includes => $mpc_includes
@@ -70,7 +66,7 @@ sub load_non_compliant_dependencies
 
                     my $new_project = DPOProject->new($lib_id, $product->{version}, $product->{version}, $type, $dpo_compliant);
 
-                    my $dpo_mpb = DPOMpb->new($product->{name}, $product->{flavour}, $lib_id, $mpb_name, $self->{mpc_includes});
+                    my $dpo_mpb = DPOMpb->new($lib_id, $mpb_name, $self->{mpc_includes});
 
                     # Get dependencies of $dep and put them into loaded_projects
                     if (!$dpo_mpb->load_non_compliant_dependencies($product, $new_project, $loaded_projects_ref, $mpbs_scanned_ref))
@@ -185,7 +181,7 @@ sub load_non_compliant_dependencies
 
                                 my $new_project = DPOProject->new($lib_id->{id}, $product->{version}, $product->{version}, $type, $dpo_compliant);
 
-                                my $dpo_mpb = DPOMpb->new($product->{name}, $product->{flavour}, $lib_id->{id}, $foreign_mpb, $ace_mpc_includes);
+                                my $dpo_mpb = DPOMpb->new($lib_id->{id}, $foreign_mpb, $ace_mpc_includes);
 
                                 # Get dependencies of $dep and put them into loaded_projects
                                 if (!$dpo_mpb->load_non_compliant_dependencies($product, $new_project, $loaded_projects_ref, $mpbs_scanned_ref))
