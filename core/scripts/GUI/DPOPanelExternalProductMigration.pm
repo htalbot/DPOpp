@@ -1266,8 +1266,8 @@ sub get_mpc_compliant_mpbs
                     my @libs_ids;
                     my $level = 0;
                     my @mpc_includes = $path;
-                    my $err;
-                    if (!DPOMpb::get_libs_ids(0, $x->{id}, \@mpc_includes, \@libs_ids, \$level, \$err))
+                    my @foreign_mpbs_ref;
+                    if (!DPOMpb::get_libs_ids(0, $x->{id}, \@mpc_includes, \@libs_ids, \$level, \@foreign_mpbs_ref))
                     {
                         Wx::MessageBox("Failed to get libs ids for $x->{id}.", "", Wx::wxOK | Wx::wxICON_ERROR);
                         return 0;

@@ -44,7 +44,8 @@ sub load_non_compliant_dependencies
     {
         # Get associated mpbs (those from product's mpbs inherit)
         my @associated_libs;
-        if ($self->get_non_compliant_associated_libs(\@associated_libs))
+        my @foreign_mpbs;
+        if ($self->get_non_compliant_associated_libs(\@associated_libs, \@foreign_mpbs))
         {
             # Make projects with the associated mpbs and make them dependencies of $project
             foreach my $associated_lib (@associated_libs)
@@ -55,8 +56,8 @@ sub load_non_compliant_dependencies
                     && $lib_id ne "TAO_IDL_BE") # TO_DO
                 {
                     my $dpo_compliant = DPOCompliant->new(0, # not compliant
-                                                            $self->{product_name},
-                                                            $self->{product_flavour},
+                                                            $product->{name},
+                                                            $product->{flavour},
                                                             $mpb_name,
                                                             $self->{mpc_includes});
 
@@ -69,7 +70,7 @@ sub load_non_compliant_dependencies
 
                     my $new_project = DPOProject->new($lib_id, $product->{version}, $product->{version}, $type, $dpo_compliant);
 
-                    my $dpo_mpb = DPOMpb->new($self->{product_name}, $self->{product_flavour}, $lib_id, $mpb_name, $self->{mpc_includes});
+                    my $dpo_mpb = DPOMpb->new($product->{name}, $product->{flavour}, $lib_id, $mpb_name, $self->{mpc_includes});
 
                     # Get dependencies of $dep and put them into loaded_projects
                     if (!$dpo_mpb->load_non_compliant_dependencies($product, $new_project, $loaded_projects_ref, $mpbs_scanned_ref))
@@ -102,6 +103,130 @@ sub load_non_compliant_dependencies
                     }
                 }
             }
+
+            # Under usual conditions, @foreign_mpbs should be empty.
+            # However, we encountered a case where @foreign_mpbs is not empty.
+            # This happens with OpenDDS. In this case, the foreign mpbs
+            # are those from ACE/TAO. Thus, we process this case in a special
+            # way.
+
+            if (scalar(@foreign_mpbs) != 0)
+            {
+                my @mpc_related_includes;
+                if (!DPOUtils::get_ace_related_mpc_includes(\@mpc_related_includes))
+                {
+                    # TO_DO
+                    print "Can't get ACE related MPC includes\n";
+                    return 0;
+                }
+
+                my $ace_mpc_includes = "";
+                foreach my $inc (@mpc_related_includes)
+                {
+                    $ace_mpc_includes .= "$inc;";
+                }
+
+                my $product;
+                if (DPOProductConfig::get_product_with_name("ACE", \$product))
+                {
+                    my @libs_ids;
+                    my $level = 1;
+                    foreach my $foreign_mpb (@foreign_mpbs)
+                    {
+                        print "FFFF - $foreign_mpb\n";
+
+                        my $found = 0;
+                        foreach my $x (@mpc_related_includes)
+                        {
+                            my $mpb_name = "$x/$foreign_mpb.mpb";
+                            my $mpb_name_expanded = $mpb_name;
+                            DPOEnvVars::expand_env_var(\$mpb_name_expanded);
+                            if (-e $mpb_name_expanded)
+                            {
+                                my @new_foreign_mpbs;
+                                if (!get_libs_ids(0, $foreign_mpb, \@mpc_related_includes, \@libs_ids, \$level, \@new_foreign_mpbs))
+                                {
+                                    print "Can't get libs_ids from $foreign_mpb\n";
+                                    return 0;
+                                }
+                                $found = 1;
+                                last;
+                            }
+                        }
+
+                        if (!$found)
+                        {
+                            # TO_DO
+                            print "Can't find libs_ids from $foreign_mpb\n";
+                            return 0;
+                        }
+
+                        my $dpo_compliant = DPOCompliant->new(0, # not compliant
+                                                                $product->{name},
+                                                                $product->{flavour},
+                                                                $foreign_mpb,
+                                                                $ace_mpc_includes);
+
+                        foreach my $lib_id (@libs_ids)
+                        {
+                            if ($lib_id->{id} eq "TAO_IDL_BE") # TO_DO
+                            {
+                                next;
+                            }
+
+                            if ($lib_id->{mpb_name} eq $foreign_mpb)
+                            {
+                                my $type;
+                                if (!$product->get_lib_type($lib_id->{id}, \$type))
+                                {
+                                    DPOLog::report_msg(DPOEvents::GENERIC_ERROR, ["Can't get type of $lib_id->{id}"]);
+                                    return 0;
+                                }
+
+                                my $new_project = DPOProject->new($lib_id->{id}, $product->{version}, $product->{version}, $type, $dpo_compliant);
+
+                                my $dpo_mpb = DPOMpb->new($product->{name}, $product->{flavour}, $lib_id->{id}, $foreign_mpb, $ace_mpc_includes);
+
+                                # Get dependencies of $dep and put them into loaded_projects
+                                if (!$dpo_mpb->load_non_compliant_dependencies($product, $new_project, $loaded_projects_ref, $mpbs_scanned_ref))
+                                {
+                                    DPOLog::report_msg(DPOEvents::GENERIC_ERROR, ["Can't get non compliant dependencies for $new_project->{name}"]);
+                                    return 0;
+                                }
+
+                                my $dep = DPOProjectDependency->new($new_project->{name},
+                                                                    $new_project->{version},
+                                                                    $new_project->{target_version},
+                                                                    $new_project->{type},
+                                                                    $new_project->{dpo_compliant});
+
+                                if (!List::MoreUtils::any {$_->{name} eq $dep->{name}} @{$project->{dependencies_when_static}})
+                                {
+                                    push(@{$project->{dependencies_when_static}}, $dep);
+                                    push(@{$project->{dependencies_when_dynamic}}, $dep);
+                                }
+
+                                if (!List::MoreUtils::any {$_->{name} eq $new_project->{name}} @$loaded_projects_ref)
+                                {
+                                    # Non dpo compliant projects have no features file in their root.
+                                    # Few are using features files (ACE). ACE features can be obtained
+                                    # by ace itself.
+                                    #~ if (!$new_project->load_features())
+                                    #~ {
+                                        #~ DPOLog::report_msg(DPOEvents::GET_FEATURES_FAILURE, [$new_project->{name}]);
+                                        #~ return 0;
+                                    #~ }
+
+                                    push(@$loaded_projects_ref, $new_project);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                }
+            }
         }
         else
         {
@@ -118,13 +243,13 @@ sub load_non_compliant_dependencies
 
 sub get_non_compliant_associated_libs
 {
-    my ($self, $associated_mpbs_ref) = @_;
+    my ($self, $associated_mpbs_ref, $foreign_mpbs_ref) = @_;
 
     my @mpc_includes = split(/;/, $self->{mpc_includes});
 
     my @libs_ids;
     my $level = 0;
-    if (!DPOMpb::get_libs_ids(0, $self->{name}, \@mpc_includes, \@libs_ids, \$level))
+    if (!get_libs_ids(0, $self->{name}, \@mpc_includes, \@libs_ids, \$level, $foreign_mpbs_ref))
     {
         return 0;
     }
@@ -176,7 +301,7 @@ sub get_non_compliant_associated_libs
 
 sub get_libs_ids
 {
-    my ($project, $mpb_name, $mpc_includes, $libs_ids_ref, $level_ref) = @_;
+    my ($project, $mpb_name, $mpc_includes, $libs_ids_ref, $level_ref, $foreign_mpbs_ref) = @_;
 
     if (scalar(@mpc_features) == 0)
     {
@@ -219,6 +344,11 @@ sub get_libs_ids
 
             foreach my $line (@libs_lines)
             {
+                if ($line =~ /dependent_libs\s*\=/)
+                {
+                    next; # 'dependent_libs' doesn't matter
+                }
+
                 my ($libs_ids) = $line =~ /=(.*)/;
 
                 #~ #print "******************** Line containing lib: $line";
@@ -259,6 +389,7 @@ sub get_libs_ids
             {
                 foreach my $b (@base_projects)
                 {
+                    my $found = 0;
                     foreach my $x (@$mpc_includes)
                     {
                         my $mpb_name = "$x/$b.mpb";
@@ -266,9 +397,20 @@ sub get_libs_ids
                         DPOEnvVars::expand_env_var(\$mpb_name_expanded);
                         if (-e $mpb_name_expanded)
                         {
-                            get_libs_ids($project, $b, $mpc_includes, $libs_ids_ref, $level_ref);
+                            if (!get_libs_ids($project, $b, $mpc_includes, $libs_ids_ref, $level_ref, $foreign_mpbs_ref))
+                            {
+                                # TO_DO
+                                print "Can't get libs_ids from $b\n";
+                                return 0;
+                            }
+                            $found = 1;
                             last;
                         }
+                    }
+
+                    if (!$found)
+                    {
+                        push(@$foreign_mpbs_ref, $b);
                     }
                 }
             }
