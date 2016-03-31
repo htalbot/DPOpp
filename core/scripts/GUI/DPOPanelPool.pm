@@ -2106,12 +2106,11 @@ sub on_button_activate
         return;
     }
 
-# TO_DO...
-    Wx::MessageBox("The product will be closed", "", Wx::wxOK | Wx::wxICON_INFORMATION);
-    my $product_closed = 0;
-    $self->{frame}->{panel_product}->close_product();
-    $product_closed = 1;
-# ...TO_DO
+    if ($self->{frame}->{panel_product}->{this_product} ne "")
+    {
+        Wx::MessageBox("The product will be closed", "", Wx::wxOK | Wx::wxICON_INFORMATION);
+        $self->{frame}->{panel_product}->close_product();
+    }
 
     my @list_env_vars_to_del;
     my @list_env_vars_to_set;
