@@ -2539,38 +2539,19 @@ sub on_button_packaging_open_product
     # Manifest
     $self->{manifest} = DPOManifest->new();
 
-    # Determine projects according to the history of the product (we must get
-    # projects that came through time - and not deleted - until the selected version).
+    # Get projects according to version
     my @relevant_projects;
     foreach my $block (@{$self->{versions_blocks}})
     {
-        my ($major, $minor, $patch) = $block->{version} =~ /(\d+)\.(\d+)\.(\d+)/;
-
-        my ($ref_major,
-            $ref_minor,
-            $ref_patch) = $version =~ /(\d+)\.(\d+)\.(\d+)/;
-
-        if ($major > $ref_major)
+        if ($block->{version} eq $version)
         {
-            next;
-        }
-
-        if ($minor > $ref_minor)
-        {
-            next
-        }
-
-        if ($patch > $ref_patch)
-        {
-            next
-        }
-
-        foreach my $block_project (@{$block->{projects}})
-        {
-            if ($block_project->{status} ne "X")
+            foreach my $block_project (@{$block->{projects}})
             {
-                my $new_relevant_project = $block_project->clone;
-                push(@relevant_projects, $new_relevant_project);
+                if ($block_project->{status} ne "X")
+                {
+                    my $new_relevant_project = $block_project->clone;
+                    push(@relevant_projects, $new_relevant_project);
+                }
             }
         }
     }
