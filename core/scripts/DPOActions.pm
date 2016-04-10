@@ -1222,7 +1222,7 @@ sub projects_that_should_be_upgraded
         {
             if (!List::MoreUtils::any {$_ eq $dependency->{name}} @dependencies_planned_to_be_upgraded)
             {
-                push(@dependencies_planned_to_be_upgraded, $dependency->{name});
+                push(@dependencies_planned_to_be_upgraded, "$dependency->{name} ($dependency->{version} -> $dependency->{target_version})");
             }
         }
     }

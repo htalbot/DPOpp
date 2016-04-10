@@ -10,6 +10,7 @@ use strict;
 use List::MoreUtils;
 use DPOUtils;
 use DPOProduct;
+use DPOProject;
 use DPOEnvVars;
 use DPOManifest;
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
@@ -78,6 +79,28 @@ sub new
     bless($self, $class);
 
     $self->{content} = [];
+
+    return $self;
+}
+
+1;
+
+
+package ProductProjectToActivate;
+
+sub new
+{
+    my ($class,
+        $name) = @_;
+
+    my $self =
+    {
+        name => $name,
+        versions => [],
+        path => ""
+    };
+
+    bless($self, $class);
 
     return $self;
 }
@@ -757,11 +780,7 @@ sub get_products
         my $config_product = DPOProductConfig->new($file);
         if ($config_product)
         {
-            if (!$config_product->get_product(\$product))
-            {
-                DPOLog::report_msg(DPOEvents::GET_PRODUCT_FAILURE, [$config_product->{product}->{name}]);
-                return 0;
-            }
+            $config_product->get_product(\$product);
         }
         else
         {
@@ -882,7 +901,12 @@ sub fill_product_comboboxes
     my @products;
     if ($self->get_products($path, \@products))
     {
-        foreach my $product (@products)
+        if (scalar(@products) != 0)
+        {
+            $self->{combo_box_pool_products_names}->Clear();
+        }
+
+        foreach my $product (sort {$a->{name} cmp $b->{name}} @products)
         {
             if (!defined($self->{products_to_activate_dependencies}->{$product->{name}}))
             {
@@ -890,13 +914,9 @@ sub fill_product_comboboxes
             }
 
             push(@{$self->{products_to_activate_dependencies}->{$product->{name}}}, $product->{version});
-        }
 
-        $self->{combo_box_pool_products_names}->Clear();
-
-        foreach my $key (keys $self->{products_to_activate_dependencies})
-        {
-            $self->{combo_box_pool_products_names}->Append($key);
+            my $item = "$product->{name}-$product->{flavour}-$product->{version}";
+            $self->{combo_box_pool_products_names}->Append($item);
         }
     }
 }
@@ -904,6 +924,8 @@ sub fill_product_comboboxes
 sub sort_products
 {
     my ($self) = @_;
+
+    # TO_DO: to be revisited to sort flavour taking product_name into account...
 
     if ($self->{list_ctrl_product_order_current_col} == 0)
     {
@@ -1928,6 +1950,329 @@ sub load_project_dependencies
     return 1;
 }
 
+sub activate_products
+{
+    my ($self, $products_ref, $products_to_activate_ref) = @_;
+
+    my @list_env_vars_to_del;
+    my @list_env_vars_to_set;
+
+    my @failures;
+    my @prods_projs_to_activate;
+    foreach my $product_to_activate (@$products_to_activate_ref)
+    {
+        foreach my $product (@$products_ref)
+        {
+            if ("$product->{name}-$product->{version}-$product->{flavour}" eq $product_to_activate)
+            {
+                my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+                my $env_var = DPOEnvVar->new(uc($product->{name}) . "_ROOT", $path);
+                push(@list_env_vars_to_set, $env_var);
+
+                my %env_vars_to_set;
+                my %env_vars_to_del;
+                if ($product->{dpo_compliant_product}->{value})
+                {
+                    # Extract projects from dpo_versions.log
+                    my $versions_log = "$path/dpo_versions.log";
+                    my @lines;
+                    my $last_block = 0;
+                    if (DPOUtils::get_file_lines($versions_log, \@lines))
+                    {
+                        foreach my $line (@lines)
+                        {
+                            chomp $line;
+
+                            if ($line =~ /\[(\d+\.\d+\.\d+)\]/)
+                            {
+                                if ($last_block)
+                                {
+                                    last;
+                                }
+
+                                if ($1 eq $product->{version})
+                                {
+                                    $last_block = 1;
+                                }
+                                next;
+                            }
+
+                            if (!$last_block)
+                            {
+                                next;
+                            }
+
+                            if ($line =~ /^$/) # an empty line
+                            {
+                                next
+                            }
+
+                            my $status;
+                            my $project_name;
+                            my $version;
+                            if ($line =~ /-->/)
+                            {
+                                ($status, my $former_project_name, my $former_version, $project_name, $version) = $line =~ /(.)\s+(.*)-(.*) --> (.*)-(.*)/;
+                            }
+                            else
+                            {
+                                ($status, $project_name, $version) = $line =~ /(.)\s+(.*)-(.*)/;
+                            }
+
+                            my $env_var_id = uc($project_name) . "_PRJ_ROOT";
+                            my $env_var_value = "$path/modules/$project_name/$version";
+                            if ($status eq "X")
+                            {
+                                if (exists $env_vars_to_set{$env_var_id})
+                                {
+                                    delete $env_vars_to_set{$env_var_id};
+                                    $env_vars_to_del{$env_var_id} = $env_var_value;
+                                }
+                            }
+                            else
+                            {
+                                if (exists $env_vars_to_del{$env_var_id})
+                                {
+                                    delete $env_vars_to_del{$env_var_id};
+                                }
+
+                                $env_vars_to_set{$env_var_id} = $env_var_value;
+
+
+                                # Extract dependencies (build and runtime) recursively
+                                my $file = "$env_var_value/DPOProject.xml";
+                                print "FFFF - $file\n";
+
+                                if (-f $file)
+                                {
+                                    my $err;
+                                    my $config = DPOProjectConfig->new($file, \$err);
+                                    if ($config)
+                                    {
+                                        my $project;
+                                        if ($config->get_project(\$project))
+                                        {
+                                            $self->get_dependencies_to_activate($products_ref, $project, \@prods_projs_to_activate);
+                                        }
+                                        else
+                                        {
+                                            DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$project_name]);
+                                            return 0;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        DPOLog::report_msg(DPOEvents::LOAD_PROJECT_FAILURE, [$file, $err]);
+                                        return 0;
+                                    }
+                                }
+                                else
+                                {
+                                    DPOLog::report_msg(DPOEvents::FILE_DOESNT_EXIST, [$file]);
+                                    return 0;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        DPOLog::report_msg(DPOEvents::GET_LINES_FROM_FILE_FAILURE, [$versions_log]);
+                        next;
+                    }
+
+                    # Activate these products
+                }
+                else
+                {
+                    # It's not possible to determine dependencies of non DPO compliant product: $actual_product->{name}
+                    next;
+                }
+
+                foreach my $key (keys %env_vars_to_del)
+                {
+                    my $env_var = DPOEnvVar->new($key, $env_vars_to_del{$key});
+                    push(@list_env_vars_to_del, $env_var);
+                }
+
+                foreach my $key (keys %env_vars_to_set)
+                {
+                    my $env_var = DPOEnvVar->new($key, $env_vars_to_set{$key});
+                    push(@list_env_vars_to_set, $env_var);
+                }
+            }
+        }
+    }
+
+    if (scalar(@list_env_vars_to_del) != 0)
+    {
+        foreach my $env_var (@list_env_vars_to_del)
+        {
+            print "Delete env var: $env_var->{name}\n";
+        }
+        DPOEnvVars::system_del_env_vars(\@list_env_vars_to_del);
+    }
+
+    if (scalar(@list_env_vars_to_set) != 0)
+    {
+        foreach my $env_var (@list_env_vars_to_set)
+        {
+            print "Set env var: $env_var->{name} = $env_var->{value}\n";
+        }
+        DPOEnvVars::system_set_env_vars(\@list_env_vars_to_set);
+    }
+    else
+    {
+        Wx::MessageBox("Nothing activated");
+        return;
+    }
+
+    if (scalar(@$products_to_activate_ref) == scalar(@failures))
+    {
+        Wx::MessageBox("Activation failed");
+    }
+    else
+    {
+        my $text = "";
+
+        if (scalar(@failures) != 0)
+        {
+            $text = " with failures:\n\n";
+            my $sep = "";
+            foreach my $failure (@failures)
+            {
+                $text .= "$sep- $failure";
+                $sep = "\n";
+            }
+        }
+
+        Wx::MessageBox("Activated$text");
+    }
+}
+
+sub get_dependencies_to_activate
+{
+    my ($self, $products_ref, $project, $prods_projs_to_activate_ref) = @_;
+
+    foreach my $dep (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}})
+    {
+        print "ZZZZZ - $project->{name}-$project->{version}: $dep->{name}-$dep->{version}\n";
+        my $dep_name = "";
+        if ($dep->{dpo_compliant}->{value})
+        {
+            $dep_name = $dep->{name};
+        }
+        else
+        {
+            $dep_name = $dep->{dpo_compliant}->{product_name};
+        }
+
+        my $found = 0;
+        my $prod_proj_to_activate;
+        foreach my $x (@$prods_projs_to_activate_ref)
+        {
+            if ($x->{name} eq $dep_name)
+            {
+                $prod_proj_to_activate = $x;
+                $found = 1;
+                last;
+            }
+        }
+
+        if (!$found)
+        {
+            $prod_proj_to_activate = ProductProjectToActivate->new($dep_name);
+            push(@$prods_projs_to_activate_ref, $prod_proj_to_activate);
+        }
+
+        my $dig = 0;
+        if (!List::MoreUtils::any {$_ eq $dep->{version}} @{$prod_proj_to_activate->{versions}})
+        {
+            print "DDDDDD - $dep_name: $dep->{version} (project = $project->{name}-$project->{version})\n";
+            push(@{$prod_proj_to_activate->{versions}}, $dep->{version});
+            $dig = 1;
+        }
+
+        #~ my $dig = 0;
+        #~ if (!defined($dependencies_to_activate->{$dep_name}))
+        #~ {
+            #~ $dependencies_to_activate->{$dep_name} = [];
+        #~ }
+
+        #~ if (!List::MoreUtils::any {$_->{version} eq $dep->{version}} @{$dependencies_to_activate->{$dep_name}})
+        #~ {
+            #~ print "DDDDDD - $dep_name: $dep->{version}\n";
+            #~ push(@{$dependencies_to_activate->{$dep_name}}, $dep);
+            #~ $dig = 1;
+        #~ }
+
+        if ($dig)
+        {
+            if ($dep->{dpo_compliant}->{value})
+            {
+                foreach my $product (@{$products_ref})
+                {
+                    if ($product->{name} eq $dep->{dpo_compliant}->{product_name})
+                    {
+                        my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+                        my $module_path = "$path/modules/$dep_name/$dep->{version}";
+                        $prod_proj_to_activate->{path} = $module_path;
+
+                        my $file = "$module_path/DPOProject.xml";
+
+                        if (-f $file)
+                        {
+                            # TO_DO: add to dependencies_to_activate: product_name, product_version)
+                            #~ if (!defined($dependencies_to_activate->{$product->{name}}))
+                            #~ {
+                                #~ $dependencies_to_activate->{$product->{name}} = [];
+                            #~ }
+
+                            #~ if (!List::MoreUtils::any {$_->{version} eq $dep->{version}} @{$dependencies_to_activate->{$product->{name}}})
+                            #~ {
+                                #~ print "DDDDDD2222 - $product->{name}: $product->{version}\n";
+                                #~ push(@{$dependencies_to_activate->{$product->{name}}}, $dep);
+                                #~ $dig = 1;
+                            #~ }
+
+                            my $err;
+                            my $config = DPOProjectConfig->new($file, \$err);
+                            if ($config)
+                            {
+                                my $dep_as_project;
+                                if ($config->get_project(\$dep_as_project))
+                                {
+                                    $self->get_dependencies_to_activate($products_ref, $dep_as_project, $prods_projs_to_activate_ref);
+                                }
+                                else
+                                {
+                                    DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$dep_name]);
+                                    return 0;
+                                }
+                            }
+                            else
+                            {
+                                DPOLog::report_msg(DPOEvents::LOAD_PROJECT_FAILURE, [$file, $err]);
+                                return 0;
+                            }
+                        }
+                        else
+                        {
+                            DPOLog::report_msg(DPOEvents::FILE_DOESNT_EXIST, [$file]);
+                            return 0;
+                        }
+
+                    }
+                }
+            }
+            else
+            {
+                # env_var_id, env_var_value (path)
+            }
+        }
+    }
+}
+
+
 #######Eeeeeeeeeeeeeeevent handlers...
 sub on_button_load_pool
 {
@@ -2002,36 +2347,38 @@ sub on_list_ctrl_product_col_click
 {
     my ($self, $event) = @_;
 
-    if ($event->GetColumn() == 0)
-    {
-        if ($self->{list_ctrl_product_order_col_name} == 0)
-        {
-            @{$self->{selected_products}} = sort {$a->{name} cmp $b->{name}} @{$self->{selected_products}};
-            $self->{list_ctrl_product_order_col_name} = 1;
-        }
-        else
-        {
-            @{$self->{selected_products}} = sort {$b->{name} cmp $a->{name}} @{$self->{selected_products}};
-            $self->{list_ctrl_product_order_col_name} = 0;
-        }
-        $self->{list_ctrl_product_order_current_col} = 0;
-    }
-    if ($event->GetColumn() == 1)
-    {
-        if ($self->{list_ctrl_product_order_col_flavour} == 0)
-        {
-            @{$self->{selected_products}} = sort {$a->{flavour} cmp $b->{flavour}} @{$self->{selected_products}};
-            $self->{list_ctrl_product_order_col_flavour} = 1;
-        }
-        else
-        {
-            @{$self->{selected_products}} = sort {$b->{flavour} cmp $a->{flavour}} @{$self->{selected_products}};
-            $self->{list_ctrl_product_order_col_flavour} = 0;
-        }
-        $self->{list_ctrl_product_order_current_col} = 1;
-    }
+    # TO_DO: to be revisited to sort flavour taking product_name into account...
 
-    $self->fill_list_products();
+    #~ if ($event->GetColumn() == 0)
+    #~ {
+        #~ if ($self->{list_ctrl_product_order_col_name} == 0)
+        #~ {
+            #~ @{$self->{selected_products}} = sort {$a->{name} cmp $b->{name}} @{$self->{selected_products}};
+            #~ $self->{list_ctrl_product_order_col_name} = 1;
+        #~ }
+        #~ else
+        #~ {
+            #~ @{$self->{selected_products}} = sort {$b->{name} cmp $a->{name}} @{$self->{selected_products}};
+            #~ $self->{list_ctrl_product_order_col_name} = 0;
+        #~ }
+        #~ $self->{list_ctrl_product_order_current_col} = 0;
+    #~ }
+    #~ if ($event->GetColumn() == 1)
+    #~ {
+        #~ if ($self->{list_ctrl_product_order_col_flavour} == 0)
+        #~ {
+            #~ @{$self->{selected_products}} = sort {$a->{flavour} cmp $b->{flavour}} @{$self->{selected_products}};
+            #~ $self->{list_ctrl_product_order_col_flavour} = 1;
+        #~ }
+        #~ else
+        #~ {
+            #~ @{$self->{selected_products}} = sort {$b->{flavour} cmp $a->{flavour}} @{$self->{selected_products}};
+            #~ $self->{list_ctrl_product_order_col_flavour} = 0;
+        #~ }
+        #~ $self->{list_ctrl_product_order_current_col} = 1;
+    #~ }
+
+    #~ $self->fill_list_products();
 
     return;
 
@@ -2112,170 +2459,17 @@ sub on_button_activate
         $self->{frame}->{panel_product}->close_product();
     }
 
-    my @list_env_vars_to_del;
-    my @list_env_vars_to_set;
 
-    my @failures;
-    foreach my $product_to_activate (@products_to_activate)
+    my $pool_path = $self->{text_ctrl_current_pool_root}->GetValue();
+
+    my @products;
+    if ($self->get_products($pool_path, \@products))
     {
-        foreach my $product (@{$self->{selected_products}})
-        {
-            if ("$product->{name}-$product->{version}-$product->{flavour}" eq $product_to_activate)
-            {
-                my $config_product = DPOProductConfig->new($product->{xml_file});
-                if ($config_product)
-                {
-                    if (!$config_product->save($product, 1))
-                    {
-                        push(@failures, $product->{name});
-                        next;
-                    }
-                }
-                else
-                {
-                    DPOLog::report_msg(DPOEvents::LOAD_PRODUCT_FAILURE, [$product->{xml_file}]);
-                    push(@failures, $product->{name});
-                    next;
-                }
-
-                my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
-                my $env_var = DPOEnvVar->new(uc($product->{name}) . "_ROOT", $path);
-                push(@list_env_vars_to_set, $env_var);
-
-                # Extract projects from dpo_versions.log
-                my %env_vars_to_set;
-                my %env_vars_to_del;
-                if ($product->{dpo_compliant_product}->{value})
-                {
-                    my $versions_log = "$path/dpo_versions.log";
-                    my @lines;
-                    my $last_block = 0;
-                    if (DPOUtils::get_file_lines($versions_log, \@lines))
-                    {
-                        foreach my $line (@lines)
-                        {
-                            chomp $line;
-
-                            if ($line =~ /\[(\d+\.\d+\.\d+)\]/)
-                            {
-                                if ($last_block)
-                                {
-                                    last;
-                                }
-
-                                if ($1 eq $product->{version})
-                                {
-                                    $last_block = 1;
-                                }
-                                next;
-                            }
-
-                            if ($line =~ /^$/) # an empty line
-                            {
-                                next
-                            }
-
-                            print "$line\n";
-
-                            my $status;
-                            my $project_name;
-                            my $version;
-                            if ($line =~ /-->/)
-                            {
-                                ($status, my $former_project_name, my $former_version, $project_name, $version) = $line =~ /(.)\s+(.*)-(.*) --> (.*)-(.*)/;
-                            }
-                            else
-                            {
-                                ($status, $project_name, $version) = $line =~ /(.)\s+(.*)-(.*)/;
-                            }
-
-                            my $env_var_id = uc($project_name) . "_PRJ_ROOT";
-                            my $env_var_value = "$path/modules/$project_name/$version";
-                            if ($status eq "X")
-                            {
-                                if (exists $env_vars_to_set{$env_var_id})
-                                {
-                                    delete $env_vars_to_set{$env_var_id};
-                                    $env_vars_to_del{$env_var_id} = $env_var_value;
-                                }
-                            }
-                            else
-                            {
-                                if (exists $env_vars_to_del{$env_var_id})
-                                {
-                                    delete $env_vars_to_del{$env_var_id};
-                                }
-
-                                $env_vars_to_set{$env_var_id} = $env_var_value;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        DPOLog::report_msg(DPOEvents::GET_LINES_FROM_FILE_FAILURE, [$versions_log]);
-                        next;
-                    }
-                }
-
-                foreach my $key (keys %env_vars_to_del)
-                {
-                    my $env_var = DPOEnvVar->new($key, $env_vars_to_del{$key});
-                    push(@list_env_vars_to_del, $env_var);
-                }
-
-                foreach my $key (keys %env_vars_to_set)
-                {
-                    my $env_var = DPOEnvVar->new($key, $env_vars_to_set{$key});
-                    push(@list_env_vars_to_set, $env_var);
-                }
-            }
-        }
-    }
-
-    if (scalar(@list_env_vars_to_del) != 0)
-    {
-        foreach my $env_var (@list_env_vars_to_del)
-        {
-            print "DD - $env_var->{name}\n";
-        }
-        DPOEnvVars::system_del_env_vars(\@list_env_vars_to_del);
-    }
-
-    if (scalar(@list_env_vars_to_set) != 0)
-    {
-        foreach my $env_var (@list_env_vars_to_set)
-        {
-            print "Set env var: $env_var->{name} = $env_var->{value}\n";
-        }
-
-        DPOEnvVars::system_set_env_vars(\@list_env_vars_to_set);
+        $self->activate_products(\@products, \@products_to_activate);
     }
     else
     {
-        Wx::MessageBox("Nothing activated");
-        return;
-    }
-
-    if (scalar(@products_to_activate) == scalar(@failures))
-    {
-        Wx::MessageBox("Activation failed");
-    }
-    else
-    {
-        my $text = "";
-
-        if (scalar(@failures) != 0)
-        {
-            $text = " with failures:\n\n";
-            my $sep = "";
-            foreach my $failure (@failures)
-            {
-                $text .= "$sep- $failure";
-                $sep = "\n";
-            }
-        }
-
-        Wx::MessageBox("Activated$text");
+        # TO_DO
     }
 
     return;
@@ -3065,11 +3259,7 @@ sub on_button_create_package
     my $config_product = DPOProductConfig->new($file);
     if ($config_product)
     {
-        if (!$config_product->get_product(\$product))
-        {
-            DPOLog::report_msg(DPOEvents::GET_PRODUCT_FAILURE, [$config_product->{product}->{name}]);
-            return;
-        }
+        $config_product->get_product(\$product);
     }
     else
     {
@@ -3958,18 +4148,21 @@ sub on_combo_box_pool_products_names
 {
     my ($self, $event) = @_;
 
-    my $product_name = $self->{combo_box_pool_products_names}->GetValue();
+# TO_DO: get rid of on_combo_box_pool_products_names
+#        => get rid of $self->{combo_box_pool_products_versions} in wxg
 
-    if ($product_name ne "")
-    {
-        $self->{combo_box_pool_products_versions}->Clear();
+    #~ my $product_name = $self->{combo_box_pool_products_names}->GetValue();
 
-        foreach my $version (@{$self->{products_to_activate_dependencies}->{$product_name}})
-        {
-            $self->{combo_box_pool_products_versions}->Append($version);
-            print "      $version\n";
-        }
-    }
+    #~ if ($product_name ne "")
+    #~ {
+        #~ $self->{combo_box_pool_products_versions}->Clear();
+
+        #~ foreach my $version (@{$self->{products_to_activate_dependencies}->{$product_name}})
+        #~ {
+            #~ $self->{combo_box_pool_products_versions}->Append($version);
+            #~ print "      $version\n";
+        #~ }
+    #~ }
 
     return;
 
@@ -3984,31 +4177,38 @@ sub on_button_button_get_product_dependencies
 {
     my ($self, $event) = @_;
 
-    my $product_name = $self->{combo_box_pool_products_names}->GetValue();
-    if ($product_name eq "")
+    Wx::MessageBox("Not implemented yet");
+
+    #~ return;
+
+    my $product_name_flavour_version = $self->{combo_box_pool_products_names}->GetValue();
+    if ($product_name_flavour_version eq "")
     {
         Wx::MessageBox("No product selected");
         return;
     }
 
-    my $version = $self->{combo_box_pool_products_versions}->GetValue();
-    if ($version eq "")
+    my ($product_name, $flavour, $version) = $product_name_flavour_version =~ /(.*)-(.*)-(.*)/;
+
+    my $pool_path = $self->{text_ctrl_current_pool_root}->GetValue();
+
+    my @products;
+    if ($self->get_products($pool_path, \@products))
     {
-        Wx::MessageBox("No version selected");
-        return;
+        foreach my $product (@products)
+        {
+            if ($product->{name} eq $product_name
+                && $product->{flavour} eq $flavour
+                && $product->{version} eq $version)
+            {
+                my @products_to_activate;
+                push(@products_to_activate, "$product_name-$version-$flavour");
+
+                $self->activate_products(\@products, \@products_to_activate);
+                last; # Only one product to activate
+            }
+        }
     }
-
-    Wx::MessageBox("Not implemented yet");
-
-    # Obtenir un objet DPOProduct à partir de $product_name
-    # Si compliant
-    #   extraire les projets correspondants à la $version du produit (avec dpo_versions.log)
-    #   extraire les dépendances récursivement
-    #   extraire aussi les runtimes et ses dépendances
-    #   activer chaque projet (_PRJ_ROOT) et chaque produit (_ROOT)
-    # Si non compliant
-    #   extraire les runtimes et ses dépendances
-    #   activer chaque projet (_PRJ_ROOT) et chaque produit (_ROOT)
 
     return;
 

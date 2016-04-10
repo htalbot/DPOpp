@@ -1104,7 +1104,7 @@ sub load_projects_in_product
         return 0;
     }
 
-    my @listEnvVarValues; # missing env_var
+    my @listEnvVarValues;
     foreach my $x (sort @{$self->{product_projects_paths}})
     {
         $x =~ s/\\/\//g;
