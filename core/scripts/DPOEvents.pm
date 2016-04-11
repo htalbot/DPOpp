@@ -120,6 +120,7 @@ use constant NONWORKSPACE_PROJECT_DEFINED_AS_LOCAL_ON_FREEZE => 111;
 use constant MPC_FAILURE => 112;
 use constant WRONG_ARCH => 113;
 use constant PRODUCT_RUNTIME_DEPENDENCY_BAD_VERSION => 114;
+use constant GET_MULTIPLE_VERSIONS => 115;
 
 sub new
 {
@@ -817,6 +818,12 @@ sub new
                                     EVENT_TYPE_ERROR,
                                     "Wrong runtime version for %s (current: %s, registered: %s).",
                                     3); # number of parameters
+
+    $self->{+GET_MULTIPLE_VERSIONS} = DPOEvent->new(
+                                    GET_MULTIPLE_VERSIONS,
+                                    EVENT_TYPE_ERROR,
+                                    "Multiple versions of %s used: %s).",
+                                    2); # number of parameters
 
     return $self;
 }
