@@ -2079,7 +2079,7 @@ sub activate_products
                 }
                 else
                 {
-                    # It's not possible to determine dependencies of non DPO compliant product: $actual_product->{name}
+                    # It's not possible to determine dependencies of non DPO compliant product: $product->{name}
                     next;
                 }
 
@@ -2119,6 +2119,11 @@ sub activate_products
             }
             DPOLog::report_msg(DPOEvents::GET_MULTIPLE_VERSIONS, [$x->{name}, $details]);
             $ok = 0;
+        }
+        else
+        {
+            my $env_var = DPOEnvVar->new(uc($x->{name}) . "_ROOT", $x->{path});
+            push(@list_env_vars_to_set, $env_var);
         }
     }
 
@@ -2235,11 +2240,12 @@ sub get_dependencies_to_activate
 
         if ($dig)
         {
-            if ($dep->{dpo_compliant}->{value})
+            foreach my $product (@{$products_ref})
             {
-                foreach my $product (@{$products_ref})
+                if ($dep->{dpo_compliant}->{value})
                 {
-                    if ($product->{name} eq $dep->{dpo_compliant}->{product_name})
+                    if ($product->{name} eq $dep->{dpo_compliant}->{product_name}
+                        && $product->{flavour} eq $dep->{dpo_compliant}->{product_flavour})
                     {
                         my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
                         my $module_path = "$path/modules/$dep_name/$dep->{version}";
@@ -2249,19 +2255,6 @@ sub get_dependencies_to_activate
 
                         if (-f $file)
                         {
-                            # TO_DO: add to dependencies_to_activate: product_name, product_version)
-                            #~ if (!defined($dependencies_to_activate->{$product->{name}}))
-                            #~ {
-                                #~ $dependencies_to_activate->{$product->{name}} = [];
-                            #~ }
-
-                            #~ if (!List::MoreUtils::any {$_->{version} eq $dep->{version}} @{$dependencies_to_activate->{$product->{name}}})
-                            #~ {
-                                #~ print "DDDDDD2222 - $product->{name}: $product->{version}\n";
-                                #~ push(@{$dependencies_to_activate->{$product->{name}}}, $dep);
-                                #~ $dig = 1;
-                            #~ }
-
                             my $err;
                             my $config = DPOProjectConfig->new($file, \$err);
                             if ($config)
@@ -2296,29 +2289,19 @@ sub get_dependencies_to_activate
 
                     }
                 }
-            }
-            else
-            {
-                # env_var_id, env_var_value (path)
+                else
+                {
+                    if ($product->{name} eq $dep->{dpo_compliant}->{product_name}
+                        && $product->{flavour} eq $dep->{dpo_compliant}->{product_flavour}
+                        && $product->{version} eq $dep->{version})
+                    {
+                        my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+                        $prod_proj_to_activate->{path} = $path;
+                    }
+                }
             }
         }
     }
-
-    #~ foreach my $x (@$prods_projs_to_activate_ref)
-    #~ {
-        #~ if (scalar(@{$x->{versions}}) > 1)
-        #~ {
-            #~ my $sep = "";
-            #~ my $versions = "";
-            #~ foreach my $ver (@{$x->{versions}})
-            #~ {
-                #~ $versions .= "$sep$ver";
-                #~ $sep = ", ";
-            #~ }
-            #~ print "Project $project->{name}-$project->{version} uses multiple versions of $x->{name}: $versions\n";
-            #~ return 0;
-        #~ }
-    #~ }
 
     return 1;
 }

@@ -707,7 +707,10 @@ sub get_ace_related_mpc_includes
             my $env_var_value = $env_var_id;
             if (!DPOEnvVars::expand_env_var(\$env_var_value))
             {
-                DPOLog::report_msg(DPOEvents::ENV_VAR_NOT_DEFINED, [$key]);
+                if ($env_var_id !~ "XSC_ROOT") # TO_DO
+                {
+                    DPOLog::report_msg(DPOEvents::ENV_VAR_NOT_DEFINED, [$key]);
+                }
                 next;
             }
             my $path = "$env_var_value/$dyn{$key}";
