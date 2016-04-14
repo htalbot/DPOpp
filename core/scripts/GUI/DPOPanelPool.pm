@@ -118,7 +118,8 @@ sub new
     {
         name => $name,
         version_parent_projects => [],
-        path => ""
+        path => "",
+        type => ""
     };
 
     bless($self, $class);
@@ -2122,7 +2123,16 @@ sub activate_products
         }
         else
         {
-            my $env_var = DPOEnvVar->new(uc($x->{name}) . "_ROOT", $x->{path});
+            my $env_var;
+            if ($x->{type} eq "project")
+            {
+                $env_var = DPOEnvVar->new(uc($x->{name}) . "_PRJ_ROOT", $x->{path});
+            }
+            else
+            {
+                $env_var = DPOEnvVar->new(uc($x->{name}) . "_ROOT", $x->{path});
+            }
+
             push(@list_env_vars_to_set, $env_var);
         }
     }
@@ -2250,6 +2260,7 @@ sub get_dependencies_to_activate
                         my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
                         my $module_path = "$path/modules/$dep_name/$dep->{version}";
                         $prod_proj_to_activate->{path} = $module_path;
+                        $prod_proj_to_activate->{type} = "project";
 
                         my $file = "$module_path/DPOProject.xml";
 
@@ -2297,6 +2308,7 @@ sub get_dependencies_to_activate
                     {
                         my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
                         $prod_proj_to_activate->{path} = $path;
+                        $prod_proj_to_activate->{type} = "product";
                     }
                 }
             }
