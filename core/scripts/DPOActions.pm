@@ -3191,7 +3191,8 @@ sub freeze
 
         $dlg->Destroy();
 
-        if ($new_product_version eq $current_version)
+        if ($new_product_version eq $current_version
+            || $current_version eq "")
         {
             unless (-e $modules_target_directory)
             {
