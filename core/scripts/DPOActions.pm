@@ -3396,16 +3396,14 @@ sub freeze
             return 0;
         }
 
-        #~ my $runtimes_log_file = $dlg->{flavour_path} . "/dpo_runtimes.log";
-
-        #~ if (!$self->update_product_runtimes_log($runtimes_log_file, $product, $timestamp))
-        #~ {
-            #~ my $msg = "Can't update runtimes_log";
-            #~ Wx::MessageBox($msg, "", Wx::wxOK | Wx::wxICON_ERROR);
-            #~ DPOLog::report_msg(DPOEvents::FREEZE_FAILURE, ["runtimes_log (can't update)"]);
-            #~ return 0;
-        #~ }
-
+        my $runtimes_log_file = $dlg->{flavour_path} . "/dpo_runtimes.log";
+        if (!$self->update_product_runtimes_log($runtimes_log_file, $product, $timestamp))
+        {
+            my $msg = "Can't update runtimes_log";
+            Wx::MessageBox($msg, "", Wx::wxOK | Wx::wxICON_ERROR);
+            DPOLog::report_msg(DPOEvents::FREEZE_FAILURE, ["runtimes_log (can't update)"]);
+            return 0;
+        }
 
         if (!File::Copy::copy($local_dpoproduct_file, $new_product_flavour_path))
         {
@@ -3931,136 +3929,86 @@ sub add_new_product_version_entry
     return 1;
 }
 
-#~ sub update_product_runtimes_log
-#~ {
-    #~ my ($self, $runtimes_log_file, $product, $timestamp) = @_;
+sub update_product_runtimes_log
+{
+    my ($self, $runtimes_log_file, $product, $timestamp) = @_;
 
-    #~ my @runtimes_log;
-    #~ if (-f $runtimes_log_file)
-    #~ {
-        #~ # Read the file
-        #~ my @lines;
-        #~ if (DPOUtils::get_file_lines($runtimes_log_file, \@lines))
-        #~ {
-            #~ foreach my $line (@lines)
-            #~ {
-                #~ if ($line !~ /\[\d+\.\d+\.\d+]/
-                    #~ && $line !~ /^$/)
-                #~ {
-                    #~ my ($status, $runtime) = $line =~ /^(.{1})\s*(.*)/;
+    my @freeze_runtimes;
+    foreach my $runtime (@{$product->{runtime}->{runtime_products_non_compliant}})
+    {
+        foreach my $module_name (@{$runtime->{modules_names}})
+        {
+            push(@freeze_runtimes, "$runtime->{name}/$runtime->{flavour}/$runtime->{version}/$module_name");
+        }
+    }
 
-                    #~ if ($status eq "A")
-                    #~ {
-                        #~ if (!List::MoreUtils::any {$_ eq $runtime} @runtimes_log)
-                        #~ {
-                            #~ push(@runtimes_log, $runtime);
-                        #~ }
-                    #~ }
-                    #~ if ($status eq "X")
-                    #~ {
-                        #~ @runtimes_log = grep { $_ ne $runtime } @runtimes_log;
-                    #~ }
-                #~ }
-            #~ }
-        #~ }
-        #~ else
-        #~ {
-            #~ # TO_DO
-            #~ return 0;
-        #~ }
-    #~ }
+    foreach my $runtime (@{$product->{runtime}->{runtime_products_compliant}})
+    {
+        foreach my $dep (@{$runtime->{dpo_project_dependencies}})
+        {
+            my $ext = "";
+            if ($^O =~ /Win/)
+            {
+                if ($dep->{type} == 6)
+                {
+                    $ext = ".dll";
+                }
+                else
+                {
+                    if ($dep->{type} == 0
+                        || $dep->{type} == 1)
+                    {
+                        $ext = ".exe";
+                    }
+                    else
+                    {
+                        # TO_DO aviser mauvais type.
+                    }
+                }
+            }
+            push(@freeze_runtimes, "$runtime->{name}/$runtime->{flavour}/modules/$dep->{name}/$runtime->{version}/$dep->{name}$ext");
+        }
+    }
 
-    #~ my @freeze_runtimes;
-    #~ foreach my $runtime (@{$product->{runtime}->{runtime_products_non_compliant}})
-    #~ {
-#        print "PP - $runtime->{name}/$runtime->{flavour}/$runtime->{version}\n";
-        #~ foreach my $module_name (@{$runtime->{modules_names}})
-        #~ {
-            #~ push(@freeze_runtimes, "$runtime->{name}/$runtime->{flavour}/$runtime->{version}/$module_name");
-        #~ }
-    #~ }
+    my @new_log;
+    foreach my $r (@freeze_runtimes)
+    {
+        my $log_entry = "    $r";
+        push(@new_log, $log_entry);
+    }
 
-    #~ foreach my $runtime (@{$product->{runtime}->{runtime_products_compliant}})
-    #~ {
-        #~ foreach my $dep (@{$runtime->{dpo_project_dependencies}})
-        #~ {
-            #~ my $ext = "";
-            #~ if ($^O =~ /Win/)
-            #~ {
-                #~ if ($dep->{type} == 6)
-                #~ {
-                    #~ $ext = ".dll";
-                #~ }
-                #~ else
-                #~ {
-                    #~ if ($dep->{type} == 0
-                        #~ || $dep->{type} == 1)
-                    #~ {
-                        #~ $ext = ".exe";
-                    #~ }
-                    #~ else
-                    #~ {
-                        #~ # TO_DO aviser mauvais type.
-                    #~ }
-                #~ }
-            #~ }
-            #~ push(@freeze_runtimes, "$runtime->{name}/$runtime->{flavour}/modules/$dep->{name}/$runtime->{version}/$dep->{name}$ext");
-        #~ }
-    #~ }
+    my $fh = new FileHandle();
 
-    #~ my @new_log;
-    #~ foreach my $r (@runtimes_log)
-    #~ {
-        #~ print "runtime in log - $r\n";
-        #~ if (!List::MoreUtils::any {$_ eq $r} @freeze_runtimes)
-        #~ {
-            #~ my $log_entry = "X   $r";
-            #~ push(@new_log, $log_entry);
-        #~ }
-    #~ }
+    my $bPrintToFile = 0;  #  1: to file,  0: to console
 
-    #~ foreach my $r (@freeze_runtimes)
-    #~ {
-        #~ print "   runtime in this working session - $r\n";
-        #~ if (!List::MoreUtils::any {$_ eq $r} @runtimes_log)
-        #~ {
-            #~ my $log_entry = "A   $r";
-            #~ push(@new_log, $log_entry);
-        #~ }
-    #~ }
+    if (!$bPrintToFile)
+    {
+        if (!$fh->open(">> $runtimes_log_file"))
+        {
+            DPOLog::report_msg(DPOEvents::FILE_OPERATION_FAILURE, [$runtimes_log_file, $!]);
+            return 0;
+        }
+    }
+    else
+    {
+        $fh = *STDOUT;
+    }
 
-    #~ my $fh = new FileHandle();
+    print $fh "[$product->{version}] $timestamp\n";
+    foreach my $new_log_entry (@new_log)
+    {
+        print $fh "$new_log_entry\n";
+    }
 
-    #~ my $bPrintToFile = 0;  #  1: to file,  0: to console
+    print $fh "\n";
 
-    #~ if (!$bPrintToFile)
-    #~ {
-        #~ if (!$fh->open(">> $runtimes_log_file"))
-        #~ {
-            #~ DPOLog::report_msg(DPOEvents::FILE_OPERATION_FAILURE, [$runtimes_log_file, $!]);
-            #~ return 0;
-        #~ }
-    #~ }
-    #~ else
-    #~ {
-        #~ $fh = *STDOUT;
-    #~ }
+    if ($bPrintToFile)
+    {
+        $fh->close;
+    }
 
-    #~ print $fh "[$product->{version}] $timestamp\n";
-    #~ foreach my $new_log_entry (@new_log)
-    #~ {
-        #~ print $fh "$new_log_entry\n";
-    #~ }
-
-    #~ print $fh "\n";
-
-    #~ if ($bPrintToFile)
-    #~ {
-        #~ $fh->close;
-    #~ }
-
-    #~ return 1;
-#~ }
+    return 1;
+}
 
 sub header_impl_or_abstract_class_to_include
 {

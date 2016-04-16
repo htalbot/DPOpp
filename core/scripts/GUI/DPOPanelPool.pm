@@ -86,7 +86,7 @@ sub new
 1;
 
 
-package VersionParentProjects;
+package VersionParent;
 
 sub new
 {
@@ -96,7 +96,7 @@ sub new
     my $self =
     {
         version => $version,
-        parent_projects => [],
+        parents => [],
     };
 
     bless($self, $class);
@@ -117,7 +117,7 @@ sub new
     my $self =
     {
         name => $name,
-        version_parent_projects => [],
+        version_parents => [],
         path => "",
         type => ""
     };
@@ -1974,127 +1974,22 @@ sub load_project_dependencies
 
 sub activate_products
 {
-    my ($self, $products_ref, $products_to_activate_ref) = @_;
+    my ($self, $products_ref, $products_to_activate_strings_ref) = @_;
 
     my @list_env_vars_to_del;
     my @list_env_vars_to_set;
 
     my @failures;
     my @prods_projs_to_activate;
-    foreach my $product_to_activate (@$products_to_activate_ref)
+    foreach my $product_to_activate_string (@$products_to_activate_strings_ref)
     {
         foreach my $product (@$products_ref)
         {
-            if ("$product->{name}-$product->{version}-$product->{flavour}" eq $product_to_activate)
+            if (!$self->get_prods_and_projs_to_activate($product, $products_ref, $product_to_activate_string, \@list_env_vars_to_del, \@list_env_vars_to_set, \@prods_projs_to_activate))
             {
-                my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
-                my $env_var = DPOEnvVar->new(uc($product->{name}) . "_ROOT", $path);
-                push(@list_env_vars_to_set, $env_var);
-
-                my %env_vars_to_set;
-                my %env_vars_to_del;
-                if ($product->{dpo_compliant_product}->{value})
-                {
-                    my $versions_log = "$path/dpo_versions.log";
-
-                    my @versions_blocks;
-                    if (!DPOUtils::get_versions_blocks($versions_log, \@versions_blocks))
-                    {
-                        Wx::MessageBox("Can't extract versions from $versions_log");
-                        return;
-                    }
-
-                    my @relevant_projects;
-                    foreach my $block (@versions_blocks)
-                    {
-                        if ($block->{version} eq $product->{version})
-                        {
-                            foreach my $block_project (@{$block->{projects}})
-                            {
-                                my $new_relevant_project = $block_project->clone;
-                                push(@relevant_projects, $new_relevant_project);
-                            }
-                        }
-                    }
-
-                    foreach my $block_project (@relevant_projects)
-                    {
-                        my $env_var_id = uc($block_project->{project_name}) . "_PRJ_ROOT";
-                        my $env_var_value = "$path/modules/$block_project->{project_name}/$block_project->{version}";
-                        if ($block_project->{status} eq "X")
-                        {
-                            if (exists $env_vars_to_set{$env_var_id})
-                            {
-                                delete $env_vars_to_set{$env_var_id};
-                                $env_vars_to_del{$env_var_id} = $env_var_value;
-                            }
-                        }
-                        else
-                        {
-                            if (exists $env_vars_to_del{$env_var_id})
-                            {
-                                delete $env_vars_to_del{$env_var_id};
-                            }
-
-                            $env_vars_to_set{$env_var_id} = $env_var_value;
-
-
-                            # Extract dependencies (build and runtime) recursively
-                            my $file = "$env_var_value/DPOProject.xml";
-
-                            if (-f $file)
-                            {
-                                my $err;
-                                my $config = DPOProjectConfig->new($file, \$err);
-                                if ($config)
-                                {
-                                    my $project;
-                                    if ($config->get_project(\$project))
-                                    {
-                                        if (!$self->get_dependencies_to_activate($products_ref, $project, \@prods_projs_to_activate))
-                                        {
-                                            # TO_DO
-                                            Wx::MessageBox("Can't activate because multiple versions.");
-                                            return 0;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$block_project->{project_name}]);
-                                        return 0;
-                                    }
-                                }
-                                else
-                                {
-                                    DPOLog::report_msg(DPOEvents::LOAD_PROJECT_FAILURE, [$file, $err]);
-                                    return 0;
-                                }
-                            }
-                            else
-                            {
-                                DPOLog::report_msg(DPOEvents::FILE_DOESNT_EXIST, [$file]);
-                                return 0;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    # It's not possible to determine dependencies of non DPO compliant product: $product->{name}
-                    next;
-                }
-
-                foreach my $key (keys %env_vars_to_del)
-                {
-                    my $env_var = DPOEnvVar->new($key, $env_vars_to_del{$key});
-                    push(@list_env_vars_to_del, $env_var);
-                }
-
-                foreach my $key (keys %env_vars_to_set)
-                {
-                    my $env_var = DPOEnvVar->new($key, $env_vars_to_set{$key});
-                    push(@list_env_vars_to_set, $env_var);
-                }
+                # TO_DO
+                Wx::MessageBox("Can't get projects and product to activate from product $product->{name}-$product->{flavour}.");
+                return 0;
             }
         }
     }
@@ -2102,15 +1997,15 @@ sub activate_products
     my $ok = 1;
     foreach my $x (@prods_projs_to_activate)
     {
-        if (scalar(@{$x->{version_parent_projects}}) > 1)
+        if (scalar(@{$x->{version_parents}}) > 1)
         {
             my $sep = "";
-            my $details = "";
-            foreach my $version_parent_project (@{$x->{version_parent_projects}})
+            my $details = "";#
+            foreach my $version_parent_project (@{$x->{version_parents}})
             {
                 my $sep2 = "";
                 $details .= "$sep$version_parent_project->{version} (by ";
-                foreach my $parent_project (@{$version_parent_project->{parent_projects}})
+                foreach my $parent_project (@{$version_parent_project->{parents}})
                 {
                     $details .= "$sep2$parent_project->{name}-$parent_project->{version}";
                     $sep2 = ", ";
@@ -2166,7 +2061,7 @@ sub activate_products
         return;
     }
 
-    if (scalar(@$products_to_activate_ref) == scalar(@failures))
+    if (scalar(@$products_to_activate_strings_ref) == scalar(@failures))
     {
         Wx::MessageBox("Activation failed");
     }
@@ -2191,7 +2086,7 @@ sub activate_products
 
 sub get_dependencies_to_activate
 {
-    my ($self, $products_ref, $project, $prods_projs_to_activate_ref) = @_;
+    my ($self, $products_ref, $project, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
 
     foreach my $dep (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}})
     {
@@ -2225,15 +2120,15 @@ sub get_dependencies_to_activate
 
         my $dig = 0;
         $found = 0;
-        foreach my $version_parent_project (@{$prod_proj_to_activate->{version_parent_projects}})
+        foreach my $version_parent_project (@{$prod_proj_to_activate->{version_parents}})
         {
             if ($version_parent_project->{version} eq $dep->{version})
             {
                 $found = 1;
 
-                if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$project->{name}-$project->{version}"} @{$version_parent_project->{parent_projects}})
+                if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$project->{name}-$project->{version}"} @{$version_parent_project->{parents}})
                 {
-                    push(@{$version_parent_project->{parent_projects}}, $project);
+                    push(@{$version_parent_project->{parents}}, $project);
                 }
 
                 last;
@@ -2242,9 +2137,9 @@ sub get_dependencies_to_activate
 
         if (!$found)
         {
-            my $version_parent_project = VersionParentProjects->new($dep->{version});
-            push(@{$version_parent_project->{parent_projects}}, $project);
-            push(@{$prod_proj_to_activate->{version_parent_projects}}, $version_parent_project);
+            my $version_parent_project = VersionParent->new($dep->{version});
+            push(@{$version_parent_project->{parents}}, $project);
+            push(@{$prod_proj_to_activate->{version_parents}}, $version_parent_project);
             $dig = 1;
         }
 
@@ -2273,10 +2168,10 @@ sub get_dependencies_to_activate
                                 my $dep_as_project;
                                 if ($config->get_project(\$dep_as_project))
                                 {
-                                    if (!$self->get_dependencies_to_activate($products_ref, $dep_as_project, $prods_projs_to_activate_ref))
+                                    if (!$self->get_dependencies_to_activate($products_ref, $dep_as_project, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
                                     {
                                         # TO_DO
-                                        Wx::MessageBox("Can't activate because multiple versions.");
+                                        Wx::MessageBox("Can't get dependencies from project $dep_as_project->{name}-$dep_as_project->{version}.");
                                         return 0;
                                     }
                                 }
@@ -2297,7 +2192,6 @@ sub get_dependencies_to_activate
                             DPOLog::report_msg(DPOEvents::FILE_DOESNT_EXIST, [$file]);
                             return 0;
                         }
-
                     }
                 }
                 else
@@ -2312,6 +2206,229 @@ sub get_dependencies_to_activate
                     }
                 }
             }
+        }
+
+        # runtime of this dep
+        foreach my $product (@{$products_ref})
+        {
+            if ($product->{name} eq $dep->{dpo_compliant}->{product_name}
+                && $product->{flavour} eq $dep->{dpo_compliant}->{product_flavour})
+            {
+                if (!$self->get_dependencies_to_activate_from_runtime($products_ref, $product, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+                {
+                    # TO_DO
+                    Wx::MessageBox("Can't get dependencies from product $product->{name}-$product->{flavour}.");
+                    return 0;
+                }
+            }
+        }
+    }
+
+    return 1;
+}
+
+sub get_dependencies_to_activate_from_runtime
+{
+    my ($self, $products_ref, $product, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
+
+    foreach my $product_compliant (@{$product->{runtime}->{runtime_products_compliant}})
+    {
+        my $product_to_activate_string = "$product_compliant->{name}-$product_compliant->{version}-$product_compliant->{flavour}";
+
+        foreach my $product (@$products_ref)
+        {
+            if (!$self->get_prods_and_projs_to_activate($product, $products_ref, $product_to_activate_string, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+            {
+                # TO_DO
+                Wx::MessageBox("Can't get projects and product to activate from product $product->{name}-$product->{flavour}.");
+                return 0;
+            }
+        }
+    }
+
+    foreach my $runtime (@{$product->{runtime}->{runtime_products_non_compliant}})
+    {
+        my $dep_name = $runtime->{name};
+
+        my $found = 0;
+        my $prod_proj_to_activate;
+        foreach my $x (@$prods_projs_to_activate_ref)
+        {
+            if ($x->{name} eq $dep_name)
+            {
+                $prod_proj_to_activate = $x;
+                $found = 1;
+                last;
+            }
+        }
+
+        if (!$found)
+        {
+            $prod_proj_to_activate = ProductProjectToActivate->new($dep_name);
+            push(@$prods_projs_to_activate_ref, $prod_proj_to_activate);
+        }
+
+        $found = 0;
+        foreach my $version_parent_project (@{$prod_proj_to_activate->{version_parents}})
+        {
+            if ($version_parent_project->{version} eq $runtime->{version})
+            {
+                $found = 1;
+
+                if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$product->{name}-$product->{version}"} @{$version_parent_project->{parents}})
+                {
+                    push(@{$version_parent_project->{parents}}, $product);
+                }
+
+                last;
+            }
+        }
+
+        if (!$found)
+        {
+            foreach my $prod (@{$products_ref})
+            {
+                if ($prod->{name} eq $runtime->{name}
+                    && $prod->{flavour} eq $runtime->{flavour})
+                {
+                    my ($path) = $prod->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+                    $prod_proj_to_activate->{path} = $path;
+                    $prod_proj_to_activate->{type} = "product";
+
+                    my $version_parent_project = VersionParent->new($runtime->{version});
+                    push(@{$version_parent_project->{parents}}, $product);
+                    push(@{$prod_proj_to_activate->{version_parents}}, $version_parent_project);
+
+                    last;
+                }
+            }
+        }
+    }
+
+    return 1;
+}
+
+sub get_prods_and_projs_to_activate
+{
+    my ($self, $product, $products_ref, $product_to_activate_string, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
+
+    if ("$product->{name}-$product->{version}-$product->{flavour}" eq $product_to_activate_string)
+    {
+        my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+        my $env_var = DPOEnvVar->new(uc($product->{name}) . "_ROOT", $path);
+        push(@$list_env_vars_to_set_ref, $env_var);
+
+        my %env_vars_to_set;
+        my %env_vars_to_del;
+        if ($product->{dpo_compliant_product}->{value})
+        {
+            my $versions_log = "$path/dpo_versions.log";
+
+            my @versions_blocks;
+            if (!DPOUtils::get_versions_blocks($versions_log, \@versions_blocks))
+            {
+                Wx::MessageBox("Can't extract versions from $versions_log");
+                return;
+            }
+
+            my @relevant_projects;
+            foreach my $block (@versions_blocks)
+            {
+                if ($block->{version} eq $product->{version})
+                {
+                    foreach my $block_project (@{$block->{projects}})
+                    {
+                        my $new_relevant_project = $block_project->clone;
+                        push(@relevant_projects, $new_relevant_project);
+                    }
+                }
+            }
+
+            foreach my $block_project (@relevant_projects)
+            {
+                my $env_var_id = uc($block_project->{project_name}) . "_PRJ_ROOT";
+                my $env_var_value = "$path/modules/$block_project->{project_name}/$block_project->{version}";
+                if ($block_project->{status} eq "X")
+                {
+                    if (exists $env_vars_to_set{$env_var_id})
+                    {
+                        delete $env_vars_to_set{$env_var_id};
+                        $env_vars_to_del{$env_var_id} = $env_var_value;
+                    }
+                }
+                else
+                {
+                    if (exists $env_vars_to_del{$env_var_id})
+                    {
+                        delete $env_vars_to_del{$env_var_id};
+                    }
+
+                    $env_vars_to_set{$env_var_id} = $env_var_value;
+
+
+                    # Extract dependencies (build and runtime) recursively
+                    my $file = "$env_var_value/DPOProject.xml";
+
+                    if (-f $file)
+                    {
+                        my $err;
+                        my $config = DPOProjectConfig->new($file, \$err);
+                        if ($config)
+                        {
+                            my $project;
+                            if ($config->get_project(\$project))
+                            {
+                                if (!$self->get_dependencies_to_activate($products_ref, $project, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+                                {
+                                    # TO_DO
+                                    Wx::MessageBox("Can't get dependencies from product $project->{name}-$project->{flavour}.");
+                                    return 0;
+                                }
+                            }
+                            else
+                            {
+                                DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$block_project->{project_name}]);
+                                return 0;
+                            }
+                        }
+                        else
+                        {
+                            DPOLog::report_msg(DPOEvents::LOAD_PROJECT_FAILURE, [$file, $err]);
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        DPOLog::report_msg(DPOEvents::FILE_DOESNT_EXIST, [$file]);
+                        return 0;
+                    }
+                }
+            }
+        }
+        else
+        {
+            # It's not possible to determine dependencies of non DPO compliant product: $product->{name}
+            next;
+        }
+
+        # TO_DO: runtime
+        if (!$self->get_dependencies_to_activate_from_runtime($products_ref, $product, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+        {
+            # TO_DO
+            Wx::MessageBox("Can't get dependencies from product $product->{name}-$product->{flavour}.");
+            return 0;
+        }
+
+        foreach my $key (keys %env_vars_to_del)
+        {
+            my $env_var = DPOEnvVar->new($key, $env_vars_to_del{$key});
+            push(@$list_env_vars_to_del_ref, $env_var);
+        }
+
+        foreach my $key (keys %env_vars_to_set)
+        {
+            my $env_var = DPOEnvVar->new($key, $env_vars_to_set{$key});
+            push(@$list_env_vars_to_set_ref, $env_var);
         }
     }
 
@@ -2439,6 +2556,8 @@ sub on_list_ctrl_product_col_click
 sub on_button_activate
 {
     my ($self, $event) = @_;
+
+    my $wait = Wx::BusyCursor->new();
 
     my @products_to_activate;
     my @names;
