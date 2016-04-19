@@ -2316,7 +2316,7 @@ sub get_prods_and_projs_to_activate
     {
         my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
         my $env_var = DPOEnvVar->new(uc($product->{name}) . "_ROOT", $path);
-        push(@$list_env_vars_to_set_ref, $env_var);
+        #~ push(@$list_env_vars_to_set_ref, $env_var);
 
         my %env_vars_to_set;
         my %env_vars_to_del;
@@ -2428,7 +2428,7 @@ sub get_prods_and_projs_to_activate
         foreach my $key (keys %env_vars_to_set)
         {
             my $env_var = DPOEnvVar->new($key, $env_vars_to_set{$key});
-            push(@$list_env_vars_to_set_ref, $env_var);
+            #~ push(@$list_env_vars_to_set_ref, $env_var);
         }
     }
 
