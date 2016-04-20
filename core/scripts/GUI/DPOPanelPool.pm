@@ -161,22 +161,23 @@ sub new {
     $self->{button_pool_switch} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Switch..."));
     $self->{button_load_pool} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Load"));
     $self->{sizer_current_pool_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Current pool (defined by DPO_POOL_ROOT)") );
-    $self->{tree_ctrl_pool} = Wx::TreeCtrl->new($self->{notebook_pool_operations_activation}, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_HIDE_ROOT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER);
-    $self->{button_activation_expand_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Expand all"));
-    $self->{button_activation_collapse_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Collapse all"));
-    $self->{button_get_product} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("-->"));
-    $self->{sizer_160_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Global") );
     $self->{combo_box_pool_products_names} = Wx::ComboBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{sizer_163_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Name") );
     $self->{combo_box_pool_products_versions} = Wx::ComboBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{sizer_164_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Version") );
-    $self->{button_get_product_dependencies} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("-->"));
-    $self->{sizer_161_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("According to product") );
+    $self->{button_activate_according_specific_product} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate"));
+    $self->{sizer_161_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activation according to a specific product") );
+    $self->{tree_ctrl_pool} = Wx::TreeCtrl->new($self->{notebook_pool_operations_activation}, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_HIDE_ROOT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER);
+    $self->{button_activation_expand_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Expand all"));
+    $self->{button_activation_collapse_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Collapse all"));
+    $self->{button_get_product} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("-->"));
     $self->{list_ctrl_product} = Wx::ListCtrl->new($self->{notebook_pool_operations_activation}, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxSUNKEN_BORDER);
     $self->{button_activation_select_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Select all"));
     $self->{button_activation_deselect_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Deselect all"));
     $self->{button_activation_remove_from_list} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Remove from list"));
+    $self->{button_activate_last_versions} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate last versions"));
     $self->{button_activate} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate"));
+    $self->{sizer_product_activation_working_trees_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activation of any products") );
     $self->{sizer_product_activation_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Product activation from DPO pool (defined by DPO_POOL_ROOT) ") );
     $self->{button_activate_project} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate a project..."));
     $self->{sizer_project_activation_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Project activation from DPO pool (defined by DPO_POOL_ROOT)") );
@@ -247,15 +248,16 @@ sub new {
 
     Wx::Event::EVT_BUTTON($self, $self->{button_pool_switch}->GetId, \&on_button_pool_switch);
     Wx::Event::EVT_BUTTON($self, $self->{button_load_pool}->GetId, \&on_button_load_pool);
+    Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_pool_products_names}->GetId, \&on_combo_box_pool_products_names);
+    Wx::Event::EVT_BUTTON($self, $self->{button_activate_according_specific_product}->GetId, \&on_button_activate_according_specific_product);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_expand_all}->GetId, \&on_button_activation_expand_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_collapse_all}->GetId, \&on_button_activation_collapse_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_get_product}->GetId, \&on_button_get_product);
-    Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_pool_products_names}->GetId, \&on_combo_box_pool_products_names);
-    Wx::Event::EVT_BUTTON($self, $self->{button_get_product_dependencies}->GetId, \&on_button_button_get_product_dependencies);
     Wx::Event::EVT_LIST_COL_CLICK($self, $self->{list_ctrl_product}->GetId, \&on_list_ctrl_product_col_click);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_select_all}->GetId, \&on_button_activation_select_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_deselect_all}->GetId, \&on_button_activation_deselect_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_remove_from_list}->GetId, \&on_button_activation_remove_from_list);
+    Wx::Event::EVT_BUTTON($self, $self->{button_activate_last_versions}->GetId, \&on_button_activate_last_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate}->GetId, \&on_button_activate);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_project}->GetId, \&on_button_activate_project);
     Wx::Event::EVT_BUTTON($self, $self->{button_create_package_manifest_file_open}->GetId, \&on_button_create_package_manifest_file_open);
@@ -349,10 +351,10 @@ sub new {
 sub __set_properties {
     my $self = shift;
     # begin wxGlade: DPOPanelPool::__set_properties
-    $self->{tree_ctrl_pool}->SetMinSize(Wx::Size->new(138, 53));
-    $self->{button_get_product}->SetMinSize(Wx::Size->new(75, -1));
     $self->{combo_box_pool_products_names}->SetSelection(-1);
     $self->{combo_box_pool_products_versions}->SetSelection(-1);
+    $self->{tree_ctrl_pool}->SetMinSize(Wx::Size->new(138, 53));
+    $self->{button_get_product}->SetMinSize(Wx::Size->new(40, -1));
     $self->{combo_box_packaging_products}->SetMinSize(Wx::Size->new(200, 21));
     $self->{combo_box_packaging_products}->SetSelection(-1);
     $self->{combo_box_packaging_product_versions}->SetSelection(-1);
@@ -420,10 +422,14 @@ sub __do_layout {
     $self->{sizer_project_activation} = Wx::StaticBoxSizer->new($self->{sizer_project_activation_staticbox}, wxVERTICAL);
     $self->{sizer_product_activation_staticbox}->Lower();
     $self->{sizer_product_activation} = Wx::StaticBoxSizer->new($self->{sizer_product_activation_staticbox}, wxVERTICAL);
-    $self->{sizer_product_activation_working_trees} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_product_activation_working_trees_staticbox}->Lower();
+    $self->{sizer_product_activation_working_trees} = Wx::StaticBoxSizer->new($self->{sizer_product_activation_working_trees_staticbox}, wxHORIZONTAL);
     $self->{sizer_product_activation_actions} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_144} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_159} = Wx::BoxSizer->new(wxVERTICAL);
+    $self->{sizer_160} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_124} = Wx::BoxSizer->new(wxVERTICAL);
+    $self->{sizer_143} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_161_staticbox}->Lower();
     $self->{sizer_161} = Wx::StaticBoxSizer->new($self->{sizer_161_staticbox}, wxHORIZONTAL);
     $self->{sizer_162} = Wx::BoxSizer->new(wxHORIZONTAL);
@@ -431,42 +437,39 @@ sub __do_layout {
     $self->{sizer_164} = Wx::StaticBoxSizer->new($self->{sizer_164_staticbox}, wxHORIZONTAL);
     $self->{sizer_163_staticbox}->Lower();
     $self->{sizer_163} = Wx::StaticBoxSizer->new($self->{sizer_163_staticbox}, wxHORIZONTAL);
-    $self->{sizer_160_staticbox}->Lower();
-    $self->{sizer_160} = Wx::StaticBoxSizer->new($self->{sizer_160_staticbox}, wxHORIZONTAL);
-    $self->{sizer_124} = Wx::BoxSizer->new(wxVERTICAL);
-    $self->{sizer_143} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_current_pool_staticbox}->Lower();
     $self->{sizer_current_pool} = Wx::StaticBoxSizer->new($self->{sizer_current_pool_staticbox}, wxHORIZONTAL);
     $self->{sizer_current_pool}->Add($self->{text_ctrl_current_pool_root}, 1, 0, 0);
     $self->{sizer_current_pool}->Add($self->{button_pool_switch}, 0, wxLEFT, 3);
     $self->{sizer_current_pool}->Add($self->{button_load_pool}, 0, wxLEFT, 5);
     $self->{sizer_product_activation}->Add($self->{sizer_current_pool}, 0, wxALL|wxEXPAND, 5);
+    $self->{sizer_163}->Add($self->{combo_box_pool_products_names}, 1, 0, 0);
+    $self->{sizer_162}->Add($self->{sizer_163}, 1, wxEXPAND, 0);
+    $self->{sizer_164}->Add($self->{combo_box_pool_products_versions}, 1, 0, 0);
+    $self->{sizer_162}->Add($self->{sizer_164}, 1, wxEXPAND, 0);
+    $self->{sizer_161}->Add($self->{sizer_162}, 1, wxALIGN_CENTER_VERTICAL, 0);
+    $self->{sizer_161}->Add($self->{button_activate_according_specific_product}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    $self->{sizer_product_activation}->Add($self->{sizer_161}, 0, wxALL|wxEXPAND, 5);
     $self->{sizer_124}->Add($self->{tree_ctrl_pool}, 1, wxEXPAND, 0);
     $self->{sizer_143}->Add($self->{button_activation_expand_all}, 0, wxALL, 5);
     $self->{sizer_143}->Add($self->{button_activation_collapse_all}, 0, wxALL, 5);
     $self->{sizer_124}->Add($self->{sizer_143}, 0, wxALIGN_CENTER_HORIZONTAL, 0);
     $self->{sizer_160}->Add($self->{sizer_124}, 1, wxEXPAND, 0);
     $self->{sizer_160}->Add($self->{button_get_product}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 3);
-    $self->{sizer_159}->Add($self->{sizer_160}, 1, wxALL|wxEXPAND, 10);
-    $self->{sizer_163}->Add($self->{combo_box_pool_products_names}, 1, 0, 0);
-    $self->{sizer_162}->Add($self->{sizer_163}, 1, wxEXPAND, 0);
-    $self->{sizer_164}->Add($self->{combo_box_pool_products_versions}, 1, 0, 0);
-    $self->{sizer_162}->Add($self->{sizer_164}, 1, wxEXPAND, 0);
-    $self->{sizer_161}->Add($self->{sizer_162}, 1, wxALIGN_CENTER_VERTICAL, 0);
-    $self->{sizer_161}->Add($self->{button_get_product_dependencies}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-    $self->{sizer_159}->Add($self->{sizer_161}, 0, wxALL|wxEXPAND, 10);
+    $self->{sizer_159}->Add($self->{sizer_160}, 1, wxALL|wxEXPAND, 0);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_159}, 1, wxEXPAND, 0);
     $self->{sizer_144}->Add($self->{list_ctrl_product}, 1, wxEXPAND, 0);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_144}, 1, wxEXPAND, 0);
     $self->{sizer_product_activation_actions}->Add($self->{button_activation_select_all}, 0, wxALIGN_CENTER_HORIZONTAL, 0);
     $self->{sizer_product_activation_actions}->Add($self->{button_activation_deselect_all}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
     $self->{sizer_product_activation_actions}->Add($self->{button_activation_remove_from_list}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
+    $self->{sizer_product_activation_actions}->Add($self->{button_activate_last_versions}, 0, wxTOP, 5);
     $self->{sizer_product_activation_actions}->Add($self->{button_activate}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 10);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_product_activation_actions}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     $self->{sizer_product_activation}->Add($self->{sizer_product_activation_working_trees}, 1, wxALL|wxEXPAND, 5);
     $self->{sizer_activation}->Add($self->{sizer_product_activation}, 1, wxEXPAND, 0);
     $self->{sizer_project_activation}->Add($self->{button_activate_project}, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 5);
-    $self->{sizer_activation}->Add($self->{sizer_project_activation}, 0, wxEXPAND, 0);
+    $self->{sizer_activation}->Add($self->{sizer_project_activation}, 0, wxALL|wxEXPAND, 5);
     $self->{notebook_pool_operations_activation}->SetSizer($self->{sizer_activation});
     $self->{sizer_135}->Add($self->{text_ctrl_create_package_manifest_file}, 1, 0, 0);
     $self->{sizer_135}->Add($self->{button_create_package_manifest_file_open}, 0, wxLEFT, 5);
@@ -928,6 +931,7 @@ sub fill_product_comboboxes
             $self->{combo_box_pool_products_names}->Clear();
         }
 
+        my @product_name_flavour;
         foreach my $product (sort {$a->{name} cmp $b->{name}} @products)
         {
             if (!defined($self->{products_to_activate_dependencies}->{$product->{name}}))
@@ -937,8 +941,13 @@ sub fill_product_comboboxes
 
             push(@{$self->{products_to_activate_dependencies}->{$product->{name}}}, $product->{version});
 
-            my $item = "$product->{name}-$product->{flavour}-$product->{version}";
-            $self->{combo_box_pool_products_names}->Append($item);
+            #~ my $item = "$product->{name}-$product->{flavour}-$product->{version}";
+            my $item = "$product->{name}-$product->{flavour}";
+            if (!List::MoreUtils::any {$_ eq $item} @product_name_flavour)
+            {
+                $self->{combo_box_pool_products_names}->Append($item);
+                push(@product_name_flavour, $item);
+            }
         }
     }
 }
@@ -1985,7 +1994,7 @@ sub activate_products
     {
         foreach my $pool_product (@$pool_products_ref)
         {
-            if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, \@list_env_vars_to_del, \@list_env_vars_to_set, \@prods_projs_to_activate))
+            if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, \@prods_projs_to_activate))
             {
                 # TO_DO
                 Wx::MessageBox("Can't get projects and product to activate from product $pool_product->{name}-$pool_product->{flavour}.");
@@ -2086,7 +2095,7 @@ sub activate_products
 
 sub get_dependencies_to_activate
 {
-    my ($self, $pool_products_ref, $project, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
+    my ($self, $pool_products_ref, $project, $prods_projs_to_activate_ref) = @_;
 
     foreach my $dep (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}})
     {
@@ -2168,7 +2177,7 @@ sub get_dependencies_to_activate
                                 my $dep_as_project;
                                 if ($config->get_project(\$dep_as_project))
                                 {
-                                    if (!$self->get_dependencies_to_activate($pool_products_ref, $dep_as_project, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+                                    if (!$self->get_dependencies_to_activate($pool_products_ref, $dep_as_project, $prods_projs_to_activate_ref))
                                     {
                                         # TO_DO
                                         Wx::MessageBox("Can't get dependencies from project $dep_as_project->{name}-$dep_as_project->{version}.");
@@ -2214,7 +2223,7 @@ sub get_dependencies_to_activate
             if ($pool_product->{name} eq $dep->{dpo_compliant}->{product_name}
                 && $pool_product->{flavour} eq $dep->{dpo_compliant}->{product_flavour})
             {
-                if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+                if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $prods_projs_to_activate_ref))
                 {
                     # TO_DO
                     Wx::MessageBox("Can't get dependencies from product $pool_product->{name}-$pool_product->{flavour}.");
@@ -2229,7 +2238,7 @@ sub get_dependencies_to_activate
 
 sub get_dependencies_to_activate_from_runtime
 {
-    my ($self, $pool_products_ref, $product, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
+    my ($self, $pool_products_ref, $product, $prods_projs_to_activate_ref) = @_;
 
     foreach my $product_compliant (@{$product->{runtime}->{runtime_products_compliant}})
     {
@@ -2237,7 +2246,7 @@ sub get_dependencies_to_activate_from_runtime
 
         foreach my $pool_product (@$pool_products_ref)
         {
-            if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+            if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, $prods_projs_to_activate_ref))
             {
                 # TO_DO
                 Wx::MessageBox("Can't get projects and product to activate from product $pool_product->{name}-$pool_product->{flavour}.");
@@ -2310,13 +2319,11 @@ sub get_dependencies_to_activate_from_runtime
 
 sub get_prods_and_projs_to_activate
 {
-    my ($self, $pool_product, $pool_products_ref, $product_to_activate_string, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
+    my ($self, $pool_product, $pool_products_ref, $product_to_activate_string, $prods_projs_to_activate_ref) = @_;
 
     if ("$pool_product->{name}-$pool_product->{version}-$pool_product->{flavour}" eq $product_to_activate_string)
     {
         my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
-        my $env_var = DPOEnvVar->new(uc($pool_product->{name}) . "_ROOT", $path);
-        #~ push(@$list_env_vars_to_set_ref, $env_var);
 
         my %env_vars_to_set;
         my %env_vars_to_del;
@@ -2378,7 +2385,7 @@ sub get_prods_and_projs_to_activate
                             my $project;
                             if ($config->get_project(\$project))
                             {
-                                if (!$self->get_dependencies_to_activate($pool_products_ref, $project, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+                                if (!$self->get_dependencies_to_activate($pool_products_ref, $project, $prods_projs_to_activate_ref))
                                 {
                                     # TO_DO
                                     Wx::MessageBox("Can't get dependencies from product $project->{name}-$project->{flavour}.");
@@ -2412,7 +2419,7 @@ sub get_prods_and_projs_to_activate
         }
 
         # TO_DO: runtime
-        if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $list_env_vars_to_del_ref, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+        if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $prods_projs_to_activate_ref))
         {
             # TO_DO
             Wx::MessageBox("Can't get dependencies from product $pool_product->{name}-$pool_product->{flavour}.");
@@ -2422,13 +2429,11 @@ sub get_prods_and_projs_to_activate
         foreach my $key (keys %env_vars_to_del)
         {
             my $env_var = DPOEnvVar->new($key, $env_vars_to_del{$key});
-            push(@$list_env_vars_to_del_ref, $env_var);
         }
 
         foreach my $key (keys %env_vars_to_set)
         {
             my $env_var = DPOEnvVar->new($key, $env_vars_to_set{$key});
-            #~ push(@$list_env_vars_to_set_ref, $env_var);
         }
     }
 
@@ -4318,21 +4323,20 @@ sub on_combo_box_pool_products_names
 {
     my ($self, $event) = @_;
 
-# TO_DO: get rid of on_combo_box_pool_products_names
-#        => get rid of $self->{combo_box_pool_products_versions} in wxg
+    my $product_name = $self->{combo_box_pool_products_names}->GetValue();
 
-    #~ my $product_name = $self->{combo_box_pool_products_names}->GetValue();
+    ($product_name, my $flavour) = $product_name =~ /(.*)-(.*)/;
 
-    #~ if ($product_name ne "")
-    #~ {
-        #~ $self->{combo_box_pool_products_versions}->Clear();
+    if ($product_name ne "")
+    {
+        $self->{combo_box_pool_products_versions}->Clear();
 
-        #~ foreach my $version (@{$self->{products_to_activate_dependencies}->{$product_name}})
-        #~ {
-            #~ $self->{combo_box_pool_products_versions}->Append($version);
+        foreach my $version (@{$self->{products_to_activate_dependencies}->{$product_name}})
+        {
+            $self->{combo_box_pool_products_versions}->Append($version);
             #~ print "      $version\n";
-        #~ }
-    #~ }
+        }
+    }
 
     return;
 
@@ -4343,22 +4347,25 @@ sub on_combo_box_pool_products_names
 }
 
 
-sub on_button_button_get_product_dependencies
+sub on_button_activate_according_specific_product
 {
     my ($self, $event) = @_;
 
-    Wx::MessageBox("Not implemented yet");
-
-    #~ return;
-
-    my $product_name_flavour_version = $self->{combo_box_pool_products_names}->GetValue();
-    if ($product_name_flavour_version eq "")
+    my $product_name_flavour = $self->{combo_box_pool_products_names}->GetValue();
+    if ($product_name_flavour eq "")
     {
         Wx::MessageBox("No product selected");
         return;
     }
 
-    my ($product_name, $flavour, $version) = $product_name_flavour_version =~ /(.*)-(.*)-(.*)/;
+    my ($product_name, $flavour) = $product_name_flavour =~ /(.*)-(.*)/;
+
+    my $version = $self->{combo_box_pool_products_versions}->GetValue();
+    if ($version eq "")
+    {
+        Wx::MessageBox("No version selected");
+        return;
+    }
 
     my $pool_path = $self->{text_ctrl_current_pool_root}->GetValue();
 
@@ -4387,8 +4394,23 @@ sub on_button_button_get_product_dependencies
 
     return;
 
-    # wxGlade: DPOPanelPool::on_button_button_get_product_dependencies <event_handler>
-    warn "Event handler (on_button_button_get_product_dependencies) not implemented";
+    # wxGlade: DPOPanelPool::on_button_activate_according_specific_product <event_handler>
+    warn "Event handler (on_button_activate_according_specific_product) not implemented";
+    $event->Skip;
+    # end wxGlade
+}
+
+
+sub on_button_activate_last_versions
+{
+    my ($self, $event) = @_;
+
+    Wx::MessageBox("Not implemented yet");
+
+    return;
+
+    # wxGlade: DPOPanelPool::on_button_activate_last_versions <event_handler>
+    warn "Event handler (on_button_activate_last_versions) not implemented";
     $event->Skip;
     # end wxGlade
 }
