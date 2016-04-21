@@ -1994,7 +1994,7 @@ sub activate_products
     {
         foreach my $pool_product (@$pool_products_ref)
         {
-            if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, \@prods_projs_to_activate))
+            if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, \@list_env_vars_to_set, \@prods_projs_to_activate))
             {
                 # TO_DO
                 Wx::MessageBox("Can't get projects and product to activate from product $pool_product->{name}-$pool_product->{flavour}.");
@@ -2067,7 +2067,7 @@ sub activate_products
     else
     {
         Wx::MessageBox("Nothing activated");
-        return;
+        return 1;
     }
 
     if (scalar(@$products_to_activate_strings_ref) == scalar(@failures))
@@ -2095,7 +2095,7 @@ sub activate_products
 
 sub get_dependencies_to_activate
 {
-    my ($self, $pool_products_ref, $project, $prods_projs_to_activate_ref) = @_;
+    my ($self, $pool_products_ref, $project, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
 
     foreach my $dep (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}})
     {
@@ -2177,7 +2177,7 @@ sub get_dependencies_to_activate
                                 my $dep_as_project;
                                 if ($config->get_project(\$dep_as_project))
                                 {
-                                    if (!$self->get_dependencies_to_activate($pool_products_ref, $dep_as_project, $prods_projs_to_activate_ref))
+                                    if (!$self->get_dependencies_to_activate($pool_products_ref, $dep_as_project, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
                                     {
                                         # TO_DO
                                         Wx::MessageBox("Can't get dependencies from project $dep_as_project->{name}-$dep_as_project->{version}.");
@@ -2223,7 +2223,7 @@ sub get_dependencies_to_activate
             if ($pool_product->{name} eq $dep->{dpo_compliant}->{product_name}
                 && $pool_product->{flavour} eq $dep->{dpo_compliant}->{product_flavour})
             {
-                if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $prods_projs_to_activate_ref))
+                if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
                 {
                     # TO_DO
                     Wx::MessageBox("Can't get dependencies from product $pool_product->{name}-$pool_product->{flavour}.");
@@ -2238,91 +2238,93 @@ sub get_dependencies_to_activate
 
 sub get_dependencies_to_activate_from_runtime
 {
-    my ($self, $pool_products_ref, $product, $prods_projs_to_activate_ref) = @_;
+    my ($self, $pool_products_ref, $product, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
 
-    foreach my $product_compliant (@{$product->{runtime}->{runtime_products_compliant}})
-    {
-        my $product_to_activate_string = "$product_compliant->{name}-$product_compliant->{version}-$product_compliant->{flavour}";
+    #~ foreach my $product_compliant (@{$product->{runtime}->{runtime_products_compliant}})
+    #~ {
+        #~ my $product_to_activate_string = "$product_compliant->{name}-$product_compliant->{version}-$product_compliant->{flavour}";
 
-        foreach my $pool_product (@$pool_products_ref)
-        {
-            if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, $prods_projs_to_activate_ref))
-            {
-                # TO_DO
-                Wx::MessageBox("Can't get projects and product to activate from product $pool_product->{name}-$pool_product->{flavour}.");
-                return 0;
-            }
-        }
-    }
+        #~ foreach my $pool_product (@$pool_products_ref)
+        #~ {
+            #~ if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
+            #~ {
+                #~ # TO_DO
+                #~ Wx::MessageBox("Can't get projects and product to activate from product $pool_product->{name}-$pool_product->{flavour}.");
+                #~ return 0;
+            #~ }
+        #~ }
+    #~ }
 
-    foreach my $runtime (@{$product->{runtime}->{runtime_products_non_compliant}})
-    {
-        my $dep_name = $runtime->{name};
+    #~ foreach my $runtime (@{$product->{runtime}->{runtime_products_non_compliant}})
+    #~ {
+        #~ my $dep_name = $runtime->{name};
 
-        my $found = 0;
-        my $prod_proj_to_activate;
-        foreach my $x (@$prods_projs_to_activate_ref)
-        {
-            if ($x->{name} eq $dep_name)
-            {
-                $prod_proj_to_activate = $x;
-                $found = 1;
-                last;
-            }
-        }
+        #~ my $found = 0;
+        #~ my $prod_proj_to_activate;
+        #~ foreach my $x (@$prods_projs_to_activate_ref)
+        #~ {
+            #~ if ($x->{name} eq $dep_name)
+            #~ {
+                #~ $prod_proj_to_activate = $x;
+                #~ $found = 1;
+                #~ last;
+            #~ }
+        #~ }
 
-        if (!$found)
-        {
-            $prod_proj_to_activate = ProductProjectToActivate->new($dep_name);
-            push(@$prods_projs_to_activate_ref, $prod_proj_to_activate);
-        }
+        #~ if (!$found)
+        #~ {
+            #~ $prod_proj_to_activate = ProductProjectToActivate->new($dep_name);
+            #~ push(@$prods_projs_to_activate_ref, $prod_proj_to_activate);
+        #~ }
 
-        $found = 0;
-        foreach my $version_parent_project (@{$prod_proj_to_activate->{version_parents}})
-        {
-            if ($version_parent_project->{version} eq $runtime->{version})
-            {
-                $found = 1;
+        #~ $found = 0;
+        #~ foreach my $version_parent_project (@{$prod_proj_to_activate->{version_parents}})
+        #~ {
+            #~ if ($version_parent_project->{version} eq $runtime->{version})
+            #~ {
+                #~ $found = 1;
 
-                if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$product->{name}-$product->{version}"} @{$version_parent_project->{parents}})
-                {
-                    push(@{$version_parent_project->{parents}}, $product);
-                }
+                #~ if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$product->{name}-$product->{version}"} @{$version_parent_project->{parents}})
+                #~ {
+                    #~ push(@{$version_parent_project->{parents}}, $product);
+                #~ }
 
-                last;
-            }
-        }
+                #~ last;
+            #~ }
+        #~ }
 
-        if (!$found)
-        {
-            foreach my $pool_product (@{$pool_products_ref})
-            {
-                if ($pool_product->{name} eq $runtime->{name}
-                    && $pool_product->{flavour} eq $runtime->{flavour})
-                {
-                    my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
-                    $prod_proj_to_activate->{path} = $path;
-                    $prod_proj_to_activate->{type} = "product";
+        #~ if (!$found)
+        #~ {
+            #~ foreach my $pool_product (@{$pool_products_ref})
+            #~ {
+                #~ if ($pool_product->{name} eq $runtime->{name}
+                    #~ && $pool_product->{flavour} eq $runtime->{flavour})
+                #~ {
+                    #~ my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+                    #~ $prod_proj_to_activate->{path} = $path;
+                    #~ $prod_proj_to_activate->{type} = "product";
 
-                    my $version_parent_project = VersionParent->new($runtime->{version});
-                    push(@{$version_parent_project->{parents}}, $product);
-                    push(@{$prod_proj_to_activate->{version_parents}}, $version_parent_project);
+                    #~ my $version_parent_project = VersionParent->new($runtime->{version});
+                    #~ push(@{$version_parent_project->{parents}}, $product);
+                    #~ push(@{$prod_proj_to_activate->{version_parents}}, $version_parent_project);
 
-                    last;
-                }
-            }
-        }
-    }
+                    #~ last;
+                #~ }
+            #~ }
+        #~ }
+    #~ }
 
     return 1;
 }
 
 sub get_prods_and_projs_to_activate
 {
-    my ($self, $pool_product, $pool_products_ref, $product_to_activate_string, $prods_projs_to_activate_ref) = @_;
+    my ($self, $pool_product, $pool_products_ref, $product_to_activate_string,  $list_env_vars_to_set_ref, $prods_projs_to_activate_ref) = @_;
 
     if ("$pool_product->{name}-$pool_product->{version}-$pool_product->{flavour}" eq $product_to_activate_string)
     {
+        print "PPPP - $product_to_activate_string\n";
+
         my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
 
         my %env_vars_to_set;
@@ -2385,7 +2387,7 @@ sub get_prods_and_projs_to_activate
                             my $project;
                             if ($config->get_project(\$project))
                             {
-                                if (!$self->get_dependencies_to_activate($pool_products_ref, $project, $prods_projs_to_activate_ref))
+                                if (!$self->get_dependencies_to_activate($pool_products_ref, $project, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
                                 {
                                     # TO_DO
                                     Wx::MessageBox("Can't get dependencies from product $project->{name}-$project->{flavour}.");
@@ -2414,26 +2416,20 @@ sub get_prods_and_projs_to_activate
         }
         else
         {
+            my $env_var = DPOEnvVar->new(uc($pool_product->{name}) . "_ROOT", $path);
+            push(@$list_env_vars_to_set_ref, $env_var);
+
             # It's not possible to determine dependencies of non DPO compliant product: $pool_product->{name}
-            next;
+
+            return 1;
         }
 
         # TO_DO: runtime
-        if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $prods_projs_to_activate_ref))
+        if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $list_env_vars_to_set_ref, $prods_projs_to_activate_ref))
         {
             # TO_DO
             Wx::MessageBox("Can't get dependencies from product $pool_product->{name}-$pool_product->{flavour}.");
             return 0;
-        }
-
-        foreach my $key (keys %env_vars_to_del)
-        {
-            my $env_var = DPOEnvVar->new($key, $env_vars_to_del{$key});
-        }
-
-        foreach my $key (keys %env_vars_to_set)
-        {
-            my $env_var = DPOEnvVar->new($key, $env_vars_to_set{$key});
         }
     }
 
@@ -2623,7 +2619,8 @@ sub on_button_activate
         return;
     }
 
-    if ($self->{frame}->{panel_product}->{this_product} ne "")
+    if (defined($self->{frame}->{panel_product}->{this_product})
+        && $self->{frame}->{panel_product}->{this_product} ne "")
     {
         Wx::MessageBox("The product will be closed", "", Wx::wxOK | Wx::wxICON_INFORMATION);
         $self->{frame}->{panel_product}->close_product();
