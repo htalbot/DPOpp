@@ -120,6 +120,12 @@ use constant NONWORKSPACE_PROJECT_DEFINED_AS_LOCAL_ON_FREEZE => 111;
 use constant MPC_FAILURE => 112;
 use constant WRONG_ARCH => 113;
 use constant PRODUCT_RUNTIME_DEPENDENCY_BAD_VERSION => 114;
+use constant GET_MULTIPLE_VERSIONS => 115;
+use constant GET_PRODS_PROJS_TO_ACTIVATE_FAILURE => 116;
+use constant GET_DEP_TO_ACTIVATE => 117;
+use constant GET_DEP_TO_ACTIVATE_FROM_RUNTIME => 118;
+use constant NOT_DEFINED_AS_POOL => 119;
+use constant GET_VERSIONS_BLOCKS_FAILURE => 120;
 
 sub new
 {
@@ -817,6 +823,42 @@ sub new
                                     EVENT_TYPE_ERROR,
                                     "Wrong runtime version for %s (current: %s, registered: %s).",
                                     3); # number of parameters
+
+    $self->{+GET_MULTIPLE_VERSIONS} = DPOEvent->new(
+                                    GET_MULTIPLE_VERSIONS,
+                                    EVENT_TYPE_ERROR,
+                                    "Multiple versions of %s used: %s).",
+                                    2); # number of parameters
+
+    $self->{+GET_PRODS_PROJS_TO_ACTIVATE_FAILURE} = DPOEvent->new(
+                                    GET_PRODS_PROJS_TO_ACTIVATE_FAILURE,
+                                    EVENT_TYPE_ERROR,
+                                    "Can't get projects and product to activate from product %s).",
+                                    1); # number of parameters
+
+    $self->{+GET_DEP_TO_ACTIVATE} = DPOEvent->new(
+                                    GET_DEP_TO_ACTIVATE,
+                                    EVENT_TYPE_ERROR,
+                                    "Can't get dependencies from project %s).",
+                                    1); # number of parameters
+
+    $self->{+GET_DEP_TO_ACTIVATE_FROM_RUNTIME} = DPOEvent->new(
+                                    GET_DEP_TO_ACTIVATE_FROM_RUNTIME,
+                                    EVENT_TYPE_ERROR,
+                                    "Can't get dependencies from runtimes of product %s).",
+                                    1); # number of parameters
+
+    $self->{+NOT_DEFINED_AS_POOL} = DPOEvent->new(
+                                    NOT_DEFINED_AS_POOL,
+                                    EVENT_TYPE_ERROR,
+                                    "%s is not defined as a pool product or project).",
+                                    1); # number of parameters
+
+    $self->{+GET_VERSIONS_BLOCKS_FAILURE} = DPOEvent->new(
+                                    GET_VERSIONS_BLOCKS_FAILURE,
+                                    EVENT_TYPE_ERROR,
+                                    "Can't extract versions from %s).",
+                                    1); # number of parameters
 
     return $self;
 }

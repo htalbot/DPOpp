@@ -10,6 +10,7 @@ use strict;
 use List::MoreUtils;
 use DPOUtils;
 use DPOProduct;
+use DPOProject;
 use DPOEnvVars;
 use DPOManifest;
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
@@ -85,6 +86,50 @@ sub new
 1;
 
 
+package VersionParent;
+
+sub new
+{
+    my ($class,
+        $version) = @_;
+
+    my $self =
+    {
+        version => $version,
+        parents => [],
+    };
+
+    bless($self, $class);
+
+    return $self;
+}
+
+1;
+
+
+package ProductProjectToActivate;
+
+sub new
+{
+    my ($class,
+        $name) = @_;
+
+    my $self =
+    {
+        name => $name,
+        version_parents => [],
+        path => "",
+        type => ""
+    };
+
+    bless($self, $class);
+
+    return $self;
+}
+
+1;
+
+
 package DPOPanelPool;
 
 use Wx qw[:everything];
@@ -110,28 +155,29 @@ sub new {
         unless defined $style;
 
     $self = $self->SUPER::new( $parent, $id, $pos, $size, $style, $name );
+    $self->{text_ctrl_current_pool_root} = Wx::TextCtrl->new($self, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+    $self->{button_pool_switch} = Wx::Button->new($self, wxID_ANY, _T("Switch..."));
+    $self->{button_load_pool} = Wx::Button->new($self, wxID_ANY, _T("Load"));
+    $self->{sizer_current_pool_staticbox} = Wx::StaticBox->new($self, wxID_ANY, _T("Current pool (defined by DPO_POOL_ROOT)") );
     $self->{notebook_pool_operations} = Wx::Notebook->new($self, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
     $self->{notebook_pool_operations_activation} = Wx::Panel->new($self->{notebook_pool_operations}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
-    $self->{text_ctrl_current_pool_root} = Wx::TextCtrl->new($self->{notebook_pool_operations_activation}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
-    $self->{button_pool_switch} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Switch..."));
-    $self->{button_load_pool} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Load"));
-    $self->{sizer_current_pool_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Current pool (defined by DPO_POOL_ROOT)") );
-    $self->{tree_ctrl_pool} = Wx::TreeCtrl->new($self->{notebook_pool_operations_activation}, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_HIDE_ROOT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER);
-    $self->{button_activation_expand_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Expand all"));
-    $self->{button_activation_collapse_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Collapse all"));
-    $self->{button_get_product} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("-->"));
-    $self->{sizer_160_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Global") );
     $self->{combo_box_pool_products_names} = Wx::ComboBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{sizer_163_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Name") );
     $self->{combo_box_pool_products_versions} = Wx::ComboBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{sizer_164_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Version") );
-    $self->{button_get_product_dependencies} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("-->"));
-    $self->{sizer_161_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("According to product") );
+    $self->{button_activate_according_specific_product} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate"));
+    $self->{sizer_161_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activation according to a specific product") );
+    $self->{tree_ctrl_pool} = Wx::TreeCtrl->new($self->{notebook_pool_operations_activation}, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_HIDE_ROOT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER);
+    $self->{button_activation_expand_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Expand all"));
+    $self->{button_activation_collapse_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Collapse all"));
+    $self->{button_get_product} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("-->"));
     $self->{list_ctrl_product} = Wx::ListCtrl->new($self->{notebook_pool_operations_activation}, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxSUNKEN_BORDER);
     $self->{button_activation_select_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Select all"));
     $self->{button_activation_deselect_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Deselect all"));
     $self->{button_activation_remove_from_list} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Remove from list"));
+    $self->{button_activate_last_versions} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate last versions"));
     $self->{button_activate} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate"));
+    $self->{sizer_product_activation_working_trees_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activation of any products") );
     $self->{sizer_product_activation_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Product activation from DPO pool (defined by DPO_POOL_ROOT) ") );
     $self->{button_activate_project} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate a project..."));
     $self->{sizer_project_activation_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Project activation from DPO pool (defined by DPO_POOL_ROOT)") );
@@ -202,15 +248,16 @@ sub new {
 
     Wx::Event::EVT_BUTTON($self, $self->{button_pool_switch}->GetId, \&on_button_pool_switch);
     Wx::Event::EVT_BUTTON($self, $self->{button_load_pool}->GetId, \&on_button_load_pool);
+    Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_pool_products_names}->GetId, \&on_combo_box_pool_products_names);
+    Wx::Event::EVT_BUTTON($self, $self->{button_activate_according_specific_product}->GetId, \&on_button_activate_according_specific_product);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_expand_all}->GetId, \&on_button_activation_expand_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_collapse_all}->GetId, \&on_button_activation_collapse_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_get_product}->GetId, \&on_button_get_product);
-    Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_pool_products_names}->GetId, \&on_combo_box_pool_products_names);
-    Wx::Event::EVT_BUTTON($self, $self->{button_get_product_dependencies}->GetId, \&on_button_button_get_product_dependencies);
     Wx::Event::EVT_LIST_COL_CLICK($self, $self->{list_ctrl_product}->GetId, \&on_list_ctrl_product_col_click);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_select_all}->GetId, \&on_button_activation_select_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_deselect_all}->GetId, \&on_button_activation_deselect_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_remove_from_list}->GetId, \&on_button_activation_remove_from_list);
+    Wx::Event::EVT_BUTTON($self, $self->{button_activate_last_versions}->GetId, \&on_button_activate_last_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate}->GetId, \&on_button_activate);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_project}->GetId, \&on_button_activate_project);
     Wx::Event::EVT_BUTTON($self, $self->{button_create_package_manifest_file_open}->GetId, \&on_button_create_package_manifest_file_open);
@@ -304,10 +351,10 @@ sub new {
 sub __set_properties {
     my $self = shift;
     # begin wxGlade: DPOPanelPool::__set_properties
-    $self->{tree_ctrl_pool}->SetMinSize(Wx::Size->new(138, 53));
-    $self->{button_get_product}->SetMinSize(Wx::Size->new(75, -1));
     $self->{combo_box_pool_products_names}->SetSelection(-1);
     $self->{combo_box_pool_products_versions}->SetSelection(-1);
+    $self->{tree_ctrl_pool}->SetMinSize(Wx::Size->new(138, 53));
+    $self->{button_get_product}->SetMinSize(Wx::Size->new(40, -1));
     $self->{combo_box_packaging_products}->SetMinSize(Wx::Size->new(200, 21));
     $self->{combo_box_packaging_products}->SetSelection(-1);
     $self->{combo_box_packaging_product_versions}->SetSelection(-1);
@@ -326,7 +373,7 @@ sub __set_properties {
 sub __do_layout {
     my $self = shift;
     # begin wxGlade: DPOPanelPool::__do_layout
-    $self->{sizer_pool} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_pool} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_136} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_139_staticbox}->Lower();
     $self->{sizer_139} = Wx::StaticBoxSizer->new($self->{sizer_139_staticbox}, wxHORIZONTAL);
@@ -375,10 +422,14 @@ sub __do_layout {
     $self->{sizer_project_activation} = Wx::StaticBoxSizer->new($self->{sizer_project_activation_staticbox}, wxVERTICAL);
     $self->{sizer_product_activation_staticbox}->Lower();
     $self->{sizer_product_activation} = Wx::StaticBoxSizer->new($self->{sizer_product_activation_staticbox}, wxVERTICAL);
-    $self->{sizer_product_activation_working_trees} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_product_activation_working_trees_staticbox}->Lower();
+    $self->{sizer_product_activation_working_trees} = Wx::StaticBoxSizer->new($self->{sizer_product_activation_working_trees_staticbox}, wxHORIZONTAL);
     $self->{sizer_product_activation_actions} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_144} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_159} = Wx::BoxSizer->new(wxVERTICAL);
+    $self->{sizer_160} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_124} = Wx::BoxSizer->new(wxVERTICAL);
+    $self->{sizer_143} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_161_staticbox}->Lower();
     $self->{sizer_161} = Wx::StaticBoxSizer->new($self->{sizer_161_staticbox}, wxHORIZONTAL);
     $self->{sizer_162} = Wx::BoxSizer->new(wxHORIZONTAL);
@@ -386,42 +437,39 @@ sub __do_layout {
     $self->{sizer_164} = Wx::StaticBoxSizer->new($self->{sizer_164_staticbox}, wxHORIZONTAL);
     $self->{sizer_163_staticbox}->Lower();
     $self->{sizer_163} = Wx::StaticBoxSizer->new($self->{sizer_163_staticbox}, wxHORIZONTAL);
-    $self->{sizer_160_staticbox}->Lower();
-    $self->{sizer_160} = Wx::StaticBoxSizer->new($self->{sizer_160_staticbox}, wxHORIZONTAL);
-    $self->{sizer_124} = Wx::BoxSizer->new(wxVERTICAL);
-    $self->{sizer_143} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_current_pool_staticbox}->Lower();
     $self->{sizer_current_pool} = Wx::StaticBoxSizer->new($self->{sizer_current_pool_staticbox}, wxHORIZONTAL);
     $self->{sizer_current_pool}->Add($self->{text_ctrl_current_pool_root}, 1, 0, 0);
     $self->{sizer_current_pool}->Add($self->{button_pool_switch}, 0, wxLEFT, 3);
     $self->{sizer_current_pool}->Add($self->{button_load_pool}, 0, wxLEFT, 5);
-    $self->{sizer_product_activation}->Add($self->{sizer_current_pool}, 0, wxALL|wxEXPAND, 5);
+    $self->{sizer_pool}->Add($self->{sizer_current_pool}, 0, wxALL|wxEXPAND, 5);
+    $self->{sizer_163}->Add($self->{combo_box_pool_products_names}, 1, 0, 0);
+    $self->{sizer_162}->Add($self->{sizer_163}, 1, wxEXPAND, 0);
+    $self->{sizer_164}->Add($self->{combo_box_pool_products_versions}, 1, 0, 0);
+    $self->{sizer_162}->Add($self->{sizer_164}, 1, wxEXPAND, 0);
+    $self->{sizer_161}->Add($self->{sizer_162}, 1, wxALIGN_CENTER_VERTICAL, 0);
+    $self->{sizer_161}->Add($self->{button_activate_according_specific_product}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    $self->{sizer_product_activation}->Add($self->{sizer_161}, 0, wxALL|wxEXPAND, 5);
     $self->{sizer_124}->Add($self->{tree_ctrl_pool}, 1, wxEXPAND, 0);
     $self->{sizer_143}->Add($self->{button_activation_expand_all}, 0, wxALL, 5);
     $self->{sizer_143}->Add($self->{button_activation_collapse_all}, 0, wxALL, 5);
     $self->{sizer_124}->Add($self->{sizer_143}, 0, wxALIGN_CENTER_HORIZONTAL, 0);
     $self->{sizer_160}->Add($self->{sizer_124}, 1, wxEXPAND, 0);
     $self->{sizer_160}->Add($self->{button_get_product}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 3);
-    $self->{sizer_159}->Add($self->{sizer_160}, 1, wxALL|wxEXPAND, 10);
-    $self->{sizer_163}->Add($self->{combo_box_pool_products_names}, 1, 0, 0);
-    $self->{sizer_162}->Add($self->{sizer_163}, 1, wxEXPAND, 0);
-    $self->{sizer_164}->Add($self->{combo_box_pool_products_versions}, 1, 0, 0);
-    $self->{sizer_162}->Add($self->{sizer_164}, 1, wxEXPAND, 0);
-    $self->{sizer_161}->Add($self->{sizer_162}, 1, wxALIGN_CENTER_VERTICAL, 0);
-    $self->{sizer_161}->Add($self->{button_get_product_dependencies}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-    $self->{sizer_159}->Add($self->{sizer_161}, 0, wxALL|wxEXPAND, 10);
+    $self->{sizer_159}->Add($self->{sizer_160}, 1, wxALL|wxEXPAND, 0);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_159}, 1, wxEXPAND, 0);
     $self->{sizer_144}->Add($self->{list_ctrl_product}, 1, wxEXPAND, 0);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_144}, 1, wxEXPAND, 0);
     $self->{sizer_product_activation_actions}->Add($self->{button_activation_select_all}, 0, wxALIGN_CENTER_HORIZONTAL, 0);
     $self->{sizer_product_activation_actions}->Add($self->{button_activation_deselect_all}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
     $self->{sizer_product_activation_actions}->Add($self->{button_activation_remove_from_list}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
+    $self->{sizer_product_activation_actions}->Add($self->{button_activate_last_versions}, 0, wxTOP, 5);
     $self->{sizer_product_activation_actions}->Add($self->{button_activate}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 10);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_product_activation_actions}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     $self->{sizer_product_activation}->Add($self->{sizer_product_activation_working_trees}, 1, wxALL|wxEXPAND, 5);
     $self->{sizer_activation}->Add($self->{sizer_product_activation}, 1, wxEXPAND, 0);
     $self->{sizer_project_activation}->Add($self->{button_activate_project}, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 5);
-    $self->{sizer_activation}->Add($self->{sizer_project_activation}, 0, wxEXPAND, 0);
+    $self->{sizer_activation}->Add($self->{sizer_project_activation}, 0, wxALL|wxEXPAND, 5);
     $self->{notebook_pool_operations_activation}->SetSizer($self->{sizer_activation});
     $self->{sizer_135}->Add($self->{text_ctrl_create_package_manifest_file}, 1, 0, 0);
     $self->{sizer_135}->Add($self->{button_create_package_manifest_file_open}, 0, wxLEFT, 5);
@@ -504,7 +552,7 @@ sub __do_layout {
     $self->{notebook_pool_operations}->AddPage($self->{notebook_pool_operations_packaging}, _T("Packaging"));
     $self->{notebook_pool_operations}->AddPage($self->{notebook_pool_operations_impact}, _T("Impact"));
     $self->{notebook_pool_operations}->AddPage($self->{notebook_pool_operations_backup}, _T("Backup"));
-    $self->{sizer_pool}->Add($self->{notebook_pool_operations}, 2, wxEXPAND, 0);
+    $self->{sizer_pool}->Add($self->{notebook_pool_operations}, 2, wxTOP|wxEXPAND, 10);
     $self->SetSizer($self->{sizer_pool});
     $self->{sizer_pool}->Fit($self);
     # end wxGlade
@@ -757,11 +805,7 @@ sub get_products
         my $config_product = DPOProductConfig->new($file);
         if ($config_product)
         {
-            if (!$config_product->get_product(\$product))
-            {
-                DPOLog::report_msg(DPOEvents::GET_PRODUCT_FAILURE, [$config_product->{product}->{name}]);
-                return 0;
-            }
+            $config_product->get_product(\$product);
         }
         else
         {
@@ -882,7 +926,13 @@ sub fill_product_comboboxes
     my @products;
     if ($self->get_products($path, \@products))
     {
-        foreach my $product (@products)
+        if (scalar(@products) != 0)
+        {
+            $self->{combo_box_pool_products_names}->Clear();
+        }
+
+        my @product_name_flavour;
+        foreach my $product (sort {$a->{name} cmp $b->{name}} @products)
         {
             if (!defined($self->{products_to_activate_dependencies}->{$product->{name}}))
             {
@@ -890,13 +940,14 @@ sub fill_product_comboboxes
             }
 
             push(@{$self->{products_to_activate_dependencies}->{$product->{name}}}, $product->{version});
-        }
 
-        $self->{combo_box_pool_products_names}->Clear();
-
-        foreach my $key (keys $self->{products_to_activate_dependencies})
-        {
-            $self->{combo_box_pool_products_names}->Append($key);
+            #~ my $item = "$product->{name}-$product->{flavour}-$product->{version}";
+            my $item = "$product->{name}-$product->{flavour}";
+            if (!List::MoreUtils::any {$_ eq $item} @product_name_flavour)
+            {
+                $self->{combo_box_pool_products_names}->Append($item);
+                push(@product_name_flavour, $item);
+            }
         }
     }
 }
@@ -904,6 +955,8 @@ sub fill_product_comboboxes
 sub sort_products
 {
     my ($self) = @_;
+
+    # TO_DO: to be revisited to sort flavour taking product_name into account...
 
     if ($self->{list_ctrl_product_order_current_col} == 0)
     {
@@ -994,7 +1047,7 @@ sub get_manifest_from_runtime
     my $product;
     if (!DPOProductConfig::get_product_with_name($product_name, \$product))
     {
-        Wx::MessageBox("Can't load product $product_name", "", Wx::wxOK | Wx::wxICON_ERROR);
+        DPOLog::report_msg(DPOEvents::CANT_GET_PRODUCT, [$product_name]);
         return 0;
     }
 
@@ -1197,7 +1250,7 @@ sub get_manifest_from_compliant_project
 
     if (!defined($product_xml))
     {
-        Wx::MessageBox("$product_name/$flavour is not in the pool");
+        DPOLog::report_msg(DPOEvents::NOT_DEFINED_AS_POOL, ["$product_name/$flavour"]);
         return 0;
     }
     else
@@ -1332,8 +1385,7 @@ sub get_manifest_from_non_compliant_project
     }
     else
     {
-        #TO_DO
-        print "Can't get product of $product_name\n";
+        DPOLog::report_msg(DPOEvents::CANT_GET_PRODUCT, [$product_name]);
         return 0;
     }
 
@@ -1928,6 +1980,465 @@ sub load_project_dependencies
     return 1;
 }
 
+sub activate_products
+{
+    my ($self, $pool_products_ref, $products_to_activate_strings_ref) = @_;
+
+    my @list_env_vars_to_del;
+    my @list_env_vars_to_set;
+
+    my @processed;
+    my @failures;
+    my @prods_projs_to_activate;
+    foreach my $product_to_activate_string (@$products_to_activate_strings_ref)
+    {
+        foreach my $pool_product (@$pool_products_ref)
+        {
+            if ("$pool_product->{name}-$pool_product->{version}-$pool_product->{flavour}" eq $product_to_activate_string)
+            {
+                if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, \@list_env_vars_to_set, \@processed, \@prods_projs_to_activate))
+                {
+                    DPOLog::report_msg(DPOEvents::GET_PRODS_PROJS_TO_ACTIVATE_FAILURE, ["$pool_product->{name}-$pool_product->{flavour}"]);
+                    return 0;
+                }
+                last;
+            }
+        }
+    }
+
+    my $ok = 1;
+    foreach my $x (@prods_projs_to_activate)
+    {
+        if (scalar(@{$x->{version_parents}}) > 1)
+        {
+            my $sep = "";
+            my $details = "";#
+            foreach my $version_parent_project (@{$x->{version_parents}})
+            {
+                my $sep2 = "";
+                $details .= "$sep$version_parent_project->{version} (by ";
+                foreach my $parent_project (@{$version_parent_project->{parents}})
+                {
+                    $details .= "$sep2$parent_project->{name}-$parent_project->{version}";
+                    $sep2 = ", ";
+                }
+                $details .= ")";
+                $sep = ", ";
+            }
+            DPOLog::report_msg(DPOEvents::GET_MULTIPLE_VERSIONS, [$x->{name}, $details]);
+            $ok = 0;
+        }
+        else
+        {
+            my $env_var;
+            if ($x->{type} eq "project")
+            {
+                $env_var = DPOEnvVar->new(uc($x->{name}) . "_PRJ_ROOT", $x->{path});
+            }
+            else
+            {
+                $env_var = DPOEnvVar->new(uc($x->{name}) . "_ROOT", $x->{path});
+            }
+
+            push(@list_env_vars_to_set, $env_var);
+        }
+    }
+
+    if (!$ok)
+    {
+        # TO_DO
+        return 0;
+    }
+
+    if (scalar(@list_env_vars_to_del) != 0)
+    {
+        foreach my $env_var (@list_env_vars_to_del)
+        {
+            print "Delete env var: $env_var->{name}\n";
+        }
+        DPOEnvVars::system_del_env_vars(\@list_env_vars_to_del);
+    }
+
+    if (scalar(@list_env_vars_to_set) != 0)
+    {
+        foreach my $env_var (@list_env_vars_to_set)
+        {
+            print "Set env var: $env_var->{name} = $env_var->{value}\n";
+        }
+        DPOEnvVars::system_set_env_vars(\@list_env_vars_to_set);
+    }
+    else
+    {
+        Wx::MessageBox("Nothing activated");
+        return 1;
+    }
+
+    if (scalar(@$products_to_activate_strings_ref) == scalar(@failures))
+    {
+        Wx::MessageBox("Activation failed");
+    }
+    else
+    {
+        my $text = "";
+
+        if (scalar(@failures) != 0)
+        {
+            $text = " with failures:\n\n";
+            my $sep = "";
+            foreach my $failure (@failures)
+            {
+                $text .= "$sep- $failure";
+                $sep = "\n";
+            }
+        }
+
+        Wx::MessageBox("Activated$text");
+    }
+}
+
+sub get_dependencies_to_activate
+{
+    my ($self, $pool_products_ref, $project, $list_env_vars_to_set_ref, $processed_ref, $prods_projs_to_activate_ref) = @_;
+
+    foreach my $dep (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}})
+    {
+        my $dep_name = "";
+        if ($dep->{dpo_compliant}->{value})
+        {
+            $dep_name = $dep->{name};
+        }
+        else
+        {
+            $dep_name = $dep->{dpo_compliant}->{product_name};
+        }
+
+        my $found = 0;
+        my $prod_proj_to_activate;
+        foreach my $x (@$prods_projs_to_activate_ref)
+        {
+            if ($x->{name} eq $dep_name)
+            {
+                $prod_proj_to_activate = $x;
+                $found = 1;
+                last;
+            }
+        }
+
+        if (!$found)
+        {
+            $prod_proj_to_activate = ProductProjectToActivate->new($dep_name);
+            push(@$prods_projs_to_activate_ref, $prod_proj_to_activate);
+        }
+
+        my $dig = 0;
+        $found = 0;
+        foreach my $version_parent_project (@{$prod_proj_to_activate->{version_parents}})
+        {
+            if ($version_parent_project->{version} eq $dep->{version})
+            {
+                $found = 1;
+
+                if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$project->{name}-$project->{version}"} @{$version_parent_project->{parents}})
+                {
+                    push(@{$version_parent_project->{parents}}, $project);
+                }
+
+                last;
+            }
+        }
+
+        if (!$found)
+        {
+            my $version_parent_project = VersionParent->new($dep->{version});
+            push(@{$version_parent_project->{parents}}, $project);
+            push(@{$prod_proj_to_activate->{version_parents}}, $version_parent_project);
+            $dig = 1;
+        }
+
+        if ($dig)
+        {
+            foreach my $pool_product (@{$pool_products_ref})
+            {
+                if ($dep->{dpo_compliant}->{value})
+                {
+                    if ($pool_product->{name} eq $dep->{dpo_compliant}->{product_name}
+                        && $pool_product->{flavour} eq $dep->{dpo_compliant}->{product_flavour})
+                    {
+                        my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+                        my $module_path = "$path/modules/$dep_name/$dep->{version}";
+                        $prod_proj_to_activate->{path} = $module_path;
+                        $prod_proj_to_activate->{type} = "project";
+
+                        my $file = "$module_path/DPOProject.xml";
+
+                        if (-f $file)
+                        {
+                            my $err;
+                            my $config = DPOProjectConfig->new($file, \$err);
+                            if ($config)
+                            {
+                                my $dep_as_project;
+                                if ($config->get_project(\$dep_as_project))
+                                {
+                                    if (!$self->get_dependencies_to_activate($pool_products_ref, $dep_as_project, $list_env_vars_to_set_ref, $processed_ref, $prods_projs_to_activate_ref))
+                                    {
+                                        DPOLog::report_msg(DPOEvents::GET_DEP_TO_ACTIVATE, ["$dep_as_project->{name}-$dep_as_project->{version}"]);
+                                        return 0;
+                                    }
+                                }
+                                else
+                                {
+                                    DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$dep_name]);
+                                    return 0;
+                                }
+                            }
+                            else
+                            {
+                                DPOLog::report_msg(DPOEvents::LOAD_PROJECT_FAILURE, [$file, $err]);
+                                return 0;
+                            }
+                        }
+                        else
+                        {
+                            DPOLog::report_msg(DPOEvents::FILE_DOESNT_EXIST, [$file]);
+                            return 0;
+                        }
+                    }
+
+                    # runtime of this dep
+                    if ($pool_product->{name} eq $dep->{dpo_compliant}->{product_name}
+                        && $pool_product->{flavour} eq $dep->{dpo_compliant}->{product_flavour}
+                        && $pool_product->{version} eq $dep->{version})
+                    {
+                        if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $list_env_vars_to_set_ref, $processed_ref, $prods_projs_to_activate_ref))
+                        {
+                            DPOLog::report_msg(DPOEvents::GET_DEP_TO_ACTIVATE_FROM_RUNTIME, ["$pool_product->{name}-$pool_product->{flavour}"]);
+                            return 0;
+                        }
+                    }
+                }
+                else
+                {
+                    if ($pool_product->{name} eq $dep->{dpo_compliant}->{product_name}
+                        && $pool_product->{flavour} eq $dep->{dpo_compliant}->{product_flavour}
+                        && $pool_product->{version} eq $dep->{version})
+                    {
+                        my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+                        $prod_proj_to_activate->{path} = $path;
+                        $prod_proj_to_activate->{type} = "product";
+                    }
+                }
+            }
+        }
+    }
+
+    return 1;
+}
+
+sub get_dependencies_to_activate_from_runtime
+{
+    my ($self, $pool_products_ref, $product, $list_env_vars_to_set_ref, $processed_ref, $prods_projs_to_activate_ref) = @_;
+
+    foreach my $product_compliant (@{$product->{runtime}->{runtime_products_compliant}})
+    {
+        my $product_to_activate_string = "$product_compliant->{name}-$product_compliant->{version}-$product_compliant->{flavour}";
+
+        foreach my $pool_product (@$pool_products_ref)
+        {
+            if ("$pool_product->{name}-$pool_product->{version}-$pool_product->{flavour}" eq $product_to_activate_string)
+            {
+                if (!$self->get_prods_and_projs_to_activate($pool_product, $pool_products_ref, $product_to_activate_string, $list_env_vars_to_set_ref, $processed_ref, $prods_projs_to_activate_ref))
+                {
+                    DPOLog::report_msg(DPOEvents::GET_PRODS_PROJS_TO_ACTIVATE_FAILURE, ["$pool_product->{name}-$pool_product->{flavour}"]);
+                    return 0;
+                }
+                last;
+            }
+        }
+    }
+
+    foreach my $runtime (@{$product->{runtime}->{runtime_products_non_compliant}})
+    {
+        my $dep_name = $runtime->{name};
+
+        my $found = 0;
+        my $prod_proj_to_activate;
+        foreach my $x (@$prods_projs_to_activate_ref)
+        {
+            if ($x->{name} eq $dep_name)
+            {
+                $prod_proj_to_activate = $x;
+                $found = 1;
+                last;
+            }
+        }
+
+        if (!$found)
+        {
+            $prod_proj_to_activate = ProductProjectToActivate->new($dep_name);
+            push(@$prods_projs_to_activate_ref, $prod_proj_to_activate);
+        }
+
+        $found = 0;
+        foreach my $version_parent_project (@{$prod_proj_to_activate->{version_parents}})
+        {
+            if ($version_parent_project->{version} eq $runtime->{version})
+            {
+                $found = 1;
+
+                if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$product->{name}-$product->{version}"} @{$version_parent_project->{parents}})
+                {
+                    push(@{$version_parent_project->{parents}}, $product);
+                }
+
+                last;
+            }
+        }
+
+        if (!$found)
+        {
+            foreach my $pool_product (@{$pool_products_ref})
+            {
+                if ($pool_product->{name} eq $runtime->{name}
+                    && $pool_product->{flavour} eq $runtime->{flavour})
+                {
+                    my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+                    $prod_proj_to_activate->{path} = $path;
+                    $prod_proj_to_activate->{type} = "product";
+
+                    my $version_parent_project = VersionParent->new($runtime->{version});
+                    push(@{$version_parent_project->{parents}}, $product);
+                    push(@{$prod_proj_to_activate->{version_parents}}, $version_parent_project);
+
+                    last;
+                }
+            }
+        }
+    }
+
+    return 1;
+}
+
+sub get_prods_and_projs_to_activate
+{
+    my ($self, $pool_product, $pool_products_ref, $product_to_activate_string,  $list_env_vars_to_set_ref, $processed_ref, $prods_projs_to_activate_ref) = @_;
+
+    if (!List::MoreUtils::any {$_ eq $product_to_activate_string} @$processed_ref)
+    {
+        push(@$processed_ref, $product_to_activate_string);
+    }
+    else
+    {
+        return 1;
+    }
+
+    my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+
+    my %env_vars_to_set;
+    my %env_vars_to_del;
+    if ($pool_product->{dpo_compliant_product}->{value})
+    {
+        my $versions_log = "$path/dpo_versions.log";
+
+        my @versions_blocks;
+        if (!DPOUtils::get_versions_blocks($versions_log, \@versions_blocks))
+        {
+            DPOLog::report_msg(DPOEvents::GET_VERSIONS_BLOCKS_FAILURE, [$versions_log]);
+            return;
+        }
+
+        my @relevant_projects;
+        foreach my $block (@versions_blocks)
+        {
+            if ($block->{version} eq $pool_product->{version})
+            {
+                foreach my $block_project (@{$block->{projects}})
+                {
+                    my $new_relevant_project = $block_project->clone;
+                    push(@relevant_projects, $new_relevant_project);
+                }
+            }
+        }
+
+        foreach my $block_project (@relevant_projects)
+        {
+            my $env_var_id = uc($block_project->{project_name}) . "_PRJ_ROOT";
+            my $env_var_value = "$path/modules/$block_project->{project_name}/$block_project->{version}";
+            if ($block_project->{status} eq "X")
+            {
+                if (exists $env_vars_to_set{$env_var_id})
+                {
+                    delete $env_vars_to_set{$env_var_id};
+                    $env_vars_to_del{$env_var_id} = $env_var_value;
+                }
+            }
+            else
+            {
+                if (exists $env_vars_to_del{$env_var_id})
+                {
+                    delete $env_vars_to_del{$env_var_id};
+                }
+
+                $env_vars_to_set{$env_var_id} = $env_var_value;
+
+                # Extract dependencies (build and runtime) recursively
+                my $file = "$env_var_value/DPOProject.xml";
+
+                if (-f $file)
+                {
+                    my $err;
+                    my $config = DPOProjectConfig->new($file, \$err);
+                    if ($config)
+                    {
+                        my $project;
+                        if ($config->get_project(\$project))
+                        {
+                            if (!$self->get_dependencies_to_activate($pool_products_ref, $project, $list_env_vars_to_set_ref, $processed_ref, $prods_projs_to_activate_ref))
+                            {
+                                DPOLog::report_msg(DPOEvents::GET_DEP_TO_ACTIVATE, ["$project->{name}-$project->{flavour}"]);
+                                return 0;
+                            }
+                        }
+                        else
+                        {
+                            DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$block_project->{project_name}]);
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        DPOLog::report_msg(DPOEvents::LOAD_PROJECT_FAILURE, [$file, $err]);
+                        return 0;
+                    }
+                }
+                else
+                {
+                    DPOLog::report_msg(DPOEvents::FILE_DOESNT_EXIST, [$file]);
+                    return 0;
+                }
+            }
+        }
+    }
+    else
+    {
+        my $env_var = DPOEnvVar->new(uc($pool_product->{name}) . "_ROOT", $path);
+        push(@$list_env_vars_to_set_ref, $env_var);
+
+        # It's not possible to determine dependencies of non DPO compliant product: $pool_product->{name}
+
+        return 1;
+    }
+
+    if (!$self->get_dependencies_to_activate_from_runtime($pool_products_ref, $pool_product, $list_env_vars_to_set_ref, $processed_ref, $prods_projs_to_activate_ref))
+    {
+        DPOLog::report_msg(DPOEvents::GET_DEP_TO_ACTIVATE_FROM_RUNTIME, ["$pool_product->{name}-$pool_product->{flavour}"]);
+        return 0;
+    }
+
+    return 1;
+}
+
+
 #######Eeeeeeeeeeeeeeevent handlers...
 sub on_button_load_pool
 {
@@ -2002,36 +2513,38 @@ sub on_list_ctrl_product_col_click
 {
     my ($self, $event) = @_;
 
-    if ($event->GetColumn() == 0)
-    {
-        if ($self->{list_ctrl_product_order_col_name} == 0)
-        {
-            @{$self->{selected_products}} = sort {$a->{name} cmp $b->{name}} @{$self->{selected_products}};
-            $self->{list_ctrl_product_order_col_name} = 1;
-        }
-        else
-        {
-            @{$self->{selected_products}} = sort {$b->{name} cmp $a->{name}} @{$self->{selected_products}};
-            $self->{list_ctrl_product_order_col_name} = 0;
-        }
-        $self->{list_ctrl_product_order_current_col} = 0;
-    }
-    if ($event->GetColumn() == 1)
-    {
-        if ($self->{list_ctrl_product_order_col_flavour} == 0)
-        {
-            @{$self->{selected_products}} = sort {$a->{flavour} cmp $b->{flavour}} @{$self->{selected_products}};
-            $self->{list_ctrl_product_order_col_flavour} = 1;
-        }
-        else
-        {
-            @{$self->{selected_products}} = sort {$b->{flavour} cmp $a->{flavour}} @{$self->{selected_products}};
-            $self->{list_ctrl_product_order_col_flavour} = 0;
-        }
-        $self->{list_ctrl_product_order_current_col} = 1;
-    }
+    # TO_DO: to be revisited to sort flavour taking product_name into account...
 
-    $self->fill_list_products();
+    #~ if ($event->GetColumn() == 0)
+    #~ {
+        #~ if ($self->{list_ctrl_product_order_col_name} == 0)
+        #~ {
+            #~ @{$self->{selected_products}} = sort {$a->{name} cmp $b->{name}} @{$self->{selected_products}};
+            #~ $self->{list_ctrl_product_order_col_name} = 1;
+        #~ }
+        #~ else
+        #~ {
+            #~ @{$self->{selected_products}} = sort {$b->{name} cmp $a->{name}} @{$self->{selected_products}};
+            #~ $self->{list_ctrl_product_order_col_name} = 0;
+        #~ }
+        #~ $self->{list_ctrl_product_order_current_col} = 0;
+    #~ }
+    #~ if ($event->GetColumn() == 1)
+    #~ {
+        #~ if ($self->{list_ctrl_product_order_col_flavour} == 0)
+        #~ {
+            #~ @{$self->{selected_products}} = sort {$a->{flavour} cmp $b->{flavour}} @{$self->{selected_products}};
+            #~ $self->{list_ctrl_product_order_col_flavour} = 1;
+        #~ }
+        #~ else
+        #~ {
+            #~ @{$self->{selected_products}} = sort {$b->{flavour} cmp $a->{flavour}} @{$self->{selected_products}};
+            #~ $self->{list_ctrl_product_order_col_flavour} = 0;
+        #~ }
+        #~ $self->{list_ctrl_product_order_current_col} = 1;
+    #~ }
+
+    #~ $self->fill_list_products();
 
     return;
 
@@ -2046,6 +2559,8 @@ sub on_list_ctrl_product_col_click
 sub on_button_activate
 {
     my ($self, $event) = @_;
+
+    my $wait = Wx::BusyCursor->new();
 
     my @products_to_activate;
     my @names;
@@ -2106,176 +2621,29 @@ sub on_button_activate
         return;
     }
 
-    if ($self->{frame}->{panel_product}->{this_product} ne "")
+    if (defined($self->{frame}->{panel_product}->{this_product})
+        && $self->{frame}->{panel_product}->{this_product} ne "")
     {
         Wx::MessageBox("The product will be closed", "", Wx::wxOK | Wx::wxICON_INFORMATION);
         $self->{frame}->{panel_product}->close_product();
     }
 
-    my @list_env_vars_to_del;
-    my @list_env_vars_to_set;
 
-    my @failures;
-    foreach my $product_to_activate (@products_to_activate)
+    my $pool_path = $self->{text_ctrl_current_pool_root}->GetValue();
+
+    my @pool_products;
+    if ($self->get_products($pool_path, \@pool_products))
     {
-        foreach my $product (@{$self->{selected_products}})
+        if (!$self->activate_products(\@pool_products, \@products_to_activate))
         {
-            if ("$product->{name}-$product->{version}-$product->{flavour}" eq $product_to_activate)
-            {
-                my $config_product = DPOProductConfig->new($product->{xml_file});
-                if ($config_product)
-                {
-                    if (!$config_product->save($product, 1))
-                    {
-                        push(@failures, $product->{name});
-                        next;
-                    }
-                }
-                else
-                {
-                    DPOLog::report_msg(DPOEvents::LOAD_PRODUCT_FAILURE, [$product->{xml_file}]);
-                    push(@failures, $product->{name});
-                    next;
-                }
-
-                my ($path) = $product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
-                my $env_var = DPOEnvVar->new(uc($product->{name}) . "_ROOT", $path);
-                push(@list_env_vars_to_set, $env_var);
-
-                # Extract projects from dpo_versions.log
-                my %env_vars_to_set;
-                my %env_vars_to_del;
-                if ($product->{dpo_compliant_product}->{value})
-                {
-                    my $versions_log = "$path/dpo_versions.log";
-                    my @lines;
-                    my $last_block = 0;
-                    if (DPOUtils::get_file_lines($versions_log, \@lines))
-                    {
-                        foreach my $line (@lines)
-                        {
-                            chomp $line;
-
-                            if ($line =~ /\[(\d+\.\d+\.\d+)\]/)
-                            {
-                                if ($last_block)
-                                {
-                                    last;
-                                }
-
-                                if ($1 eq $product->{version})
-                                {
-                                    $last_block = 1;
-                                }
-                                next;
-                            }
-
-                            if ($line =~ /^$/) # an empty line
-                            {
-                                next
-                            }
-
-                            print "$line\n";
-
-                            my $status;
-                            my $project_name;
-                            my $version;
-                            if ($line =~ /-->/)
-                            {
-                                ($status, my $former_project_name, my $former_version, $project_name, $version) = $line =~ /(.)\s+(.*)-(.*) --> (.*)-(.*)/;
-                            }
-                            else
-                            {
-                                ($status, $project_name, $version) = $line =~ /(.)\s+(.*)-(.*)/;
-                            }
-
-                            my $env_var_id = uc($project_name) . "_PRJ_ROOT";
-                            my $env_var_value = "$path/modules/$project_name/$version";
-                            if ($status eq "X")
-                            {
-                                if (exists $env_vars_to_set{$env_var_id})
-                                {
-                                    delete $env_vars_to_set{$env_var_id};
-                                    $env_vars_to_del{$env_var_id} = $env_var_value;
-                                }
-                            }
-                            else
-                            {
-                                if (exists $env_vars_to_del{$env_var_id})
-                                {
-                                    delete $env_vars_to_del{$env_var_id};
-                                }
-
-                                $env_vars_to_set{$env_var_id} = $env_var_value;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        DPOLog::report_msg(DPOEvents::GET_LINES_FROM_FILE_FAILURE, [$versions_log]);
-                        next;
-                    }
-                }
-
-                foreach my $key (keys %env_vars_to_del)
-                {
-                    my $env_var = DPOEnvVar->new($key, $env_vars_to_del{$key});
-                    push(@list_env_vars_to_del, $env_var);
-                }
-
-                foreach my $key (keys %env_vars_to_set)
-                {
-                    my $env_var = DPOEnvVar->new($key, $env_vars_to_set{$key});
-                    push(@list_env_vars_to_set, $env_var);
-                }
-            }
+            # TO_DO
+            Wx::MessageBox("Can't activate");
+            return;
         }
-    }
-
-    if (scalar(@list_env_vars_to_del) != 0)
-    {
-        foreach my $env_var (@list_env_vars_to_del)
-        {
-            print "DD - $env_var->{name}\n";
-        }
-        DPOEnvVars::system_del_env_vars(\@list_env_vars_to_del);
-    }
-
-    if (scalar(@list_env_vars_to_set) != 0)
-    {
-        foreach my $env_var (@list_env_vars_to_set)
-        {
-            print "Set env var: $env_var->{name} = $env_var->{value}\n";
-        }
-
-        DPOEnvVars::system_set_env_vars(\@list_env_vars_to_set);
     }
     else
     {
-        Wx::MessageBox("Nothing activated");
-        return;
-    }
-
-    if (scalar(@products_to_activate) == scalar(@failures))
-    {
-        Wx::MessageBox("Activation failed");
-    }
-    else
-    {
-        my $text = "";
-
-        if (scalar(@failures) != 0)
-        {
-            $text = " with failures:\n\n";
-            my $sep = "";
-            foreach my $failure (@failures)
-            {
-                $text .= "$sep- $failure";
-                $sep = "\n";
-            }
-        }
-
-        Wx::MessageBox("Activated$text");
+        # TO_DO
     }
 
     return;
@@ -3065,11 +3433,7 @@ sub on_button_create_package
     my $config_product = DPOProductConfig->new($file);
     if ($config_product)
     {
-        if (!$config_product->get_product(\$product))
-        {
-            DPOLog::report_msg(DPOEvents::GET_PRODUCT_FAILURE, [$config_product->{product}->{name}]);
-            return;
-        }
+        $config_product->get_product(\$product);
     }
     else
     {
@@ -3435,8 +3799,6 @@ sub on_button_backup_pull
     $event->Skip;
     # end wxGlade
 }
-
-
 
 
 sub on_button_backup_show_changes
@@ -3960,6 +4322,8 @@ sub on_combo_box_pool_products_names
 
     my $product_name = $self->{combo_box_pool_products_names}->GetValue();
 
+    ($product_name, my $flavour) = $product_name =~ /(.*)-(.*)/;
+
     if ($product_name ne "")
     {
         $self->{combo_box_pool_products_versions}->Clear();
@@ -3967,7 +4331,7 @@ sub on_combo_box_pool_products_names
         foreach my $version (@{$self->{products_to_activate_dependencies}->{$product_name}})
         {
             $self->{combo_box_pool_products_versions}->Append($version);
-            print "      $version\n";
+            #~ print "      $version\n";
         }
     }
 
@@ -3980,16 +4344,18 @@ sub on_combo_box_pool_products_names
 }
 
 
-sub on_button_button_get_product_dependencies
+sub on_button_activate_according_specific_product
 {
     my ($self, $event) = @_;
 
-    my $product_name = $self->{combo_box_pool_products_names}->GetValue();
-    if ($product_name eq "")
+    my $product_name_flavour = $self->{combo_box_pool_products_names}->GetValue();
+    if ($product_name_flavour eq "")
     {
         Wx::MessageBox("No product selected");
         return;
     }
+
+    my ($product_name, $flavour) = $product_name_flavour =~ /(.*)-(.*)/;
 
     my $version = $self->{combo_box_pool_products_versions}->GetValue();
     if ($version eq "")
@@ -3998,22 +4364,49 @@ sub on_button_button_get_product_dependencies
         return;
     }
 
-    Wx::MessageBox("Not implemented yet");
+    my $pool_path = $self->{text_ctrl_current_pool_root}->GetValue();
 
-    # Obtenir un objet DPOProduct à partir de $product_name
-    # Si compliant
-    #   extraire les projets correspondants à la $version du produit (avec dpo_versions.log)
-    #   extraire les dépendances récursivement
-    #   extraire aussi les runtimes et ses dépendances
-    #   activer chaque projet (_PRJ_ROOT) et chaque produit (_ROOT)
-    # Si non compliant
-    #   extraire les runtimes et ses dépendances
-    #   activer chaque projet (_PRJ_ROOT) et chaque produit (_ROOT)
+    my @pool_products;
+    if ($self->get_products($pool_path, \@pool_products))
+    {
+        foreach my $product (@pool_products)
+        {
+            if ($product->{name} eq $product_name
+                && $product->{flavour} eq $flavour
+                && $product->{version} eq $version)
+            {
+                my @products_to_activate;
+                push(@products_to_activate, "$product_name-$version-$flavour");
+
+                if (!$self->activate_products(\@pool_products, \@products_to_activate))
+                {
+                    Wx::MessageBox("Can't activate");
+                    return;
+                }
+                last; # Only one product to activate
+            }
+        }
+    }
 
     return;
 
-    # wxGlade: DPOPanelPool::on_button_button_get_product_dependencies <event_handler>
-    warn "Event handler (on_button_button_get_product_dependencies) not implemented";
+    # wxGlade: DPOPanelPool::on_button_activate_according_specific_product <event_handler>
+    warn "Event handler (on_button_activate_according_specific_product) not implemented";
+    $event->Skip;
+    # end wxGlade
+}
+
+
+sub on_button_activate_last_versions
+{
+    my ($self, $event) = @_;
+
+    Wx::MessageBox("Not implemented yet");
+
+    return;
+
+    # wxGlade: DPOPanelPool::on_button_activate_last_versions <event_handler>
+    warn "Event handler (on_button_activate_last_versions) not implemented";
     $event->Skip;
     # end wxGlade
 }

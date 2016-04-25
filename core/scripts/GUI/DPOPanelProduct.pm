@@ -1104,7 +1104,7 @@ sub load_projects_in_product
         return 0;
     }
 
-    my @listEnvVarValues; # missing env_var
+    my @listEnvVarValues;
     foreach my $x (sort @{$self->{product_projects_paths}})
     {
         $x =~ s/\\/\//g;
@@ -1820,8 +1820,8 @@ sub fill_tree_runtime
         {
             $flavour = "-$runtime_product_compliant->{flavour}";
         }
-        #~ my $item = $tree_ctrl->AppendItem($root, "$runtime_product_compliant->{name}-$runtime_product_compliant->{version}$flavour");
-        my $item = $tree_ctrl->AppendItem($root, "$runtime_product_compliant->{name}");
+        my $item = $tree_ctrl->AppendItem($root, "$runtime_product_compliant->{name}-$runtime_product_compliant->{version}$flavour");
+        #~ my $item = $tree_ctrl->AppendItem($root, "$runtime_product_compliant->{name}");
 
         foreach my $project_dependency (@{$runtime_product_compliant->{dpo_project_dependencies}})
         {
@@ -3410,8 +3410,10 @@ sub remove_module_from_runtime
             {
                 if (!defined($x->{dep}))
                 {
-                    @{$self->{this_product}->{runtime}->{runtime_products_compliant}} = grep { $_->{name} ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_compliant}};
-                    @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}} = grep { $_->{name} ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}};
+                    @{$self->{this_product}->{runtime}->{runtime_products_compliant}} = grep { "$_->{name}-$_->{version}-$_->{flavour}" ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_compliant}};
+                    @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}} = grep { "$_->{name}-$_->{version}-$_->{flavour}" ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}};
+                    #~ @{$self->{this_product}->{runtime}->{runtime_products_compliant}} = grep { $_->{name} ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_compliant}};
+                    #~ @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}} = grep { $_->{name} ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}};
                 }
                 else
                 {
@@ -3927,8 +3929,8 @@ sub drag_copy
             if (DPOProductConfig::get_product_with_name($product_name, \$product))
             {
                 my $item_text = $self->{tree_ctrl_external_modules}->GetItemText($item);
-                if ($parent_item != $item
-                    || !$product->{dpo_compliant_product}->{value})
+                if ($parent_item != $item)
+                    #~ || !$product->{dpo_compliant_product}->{value})
                 {
                     if (!defined($to_copy{$product->{name}}))
                     {

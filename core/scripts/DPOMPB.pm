@@ -6,6 +6,7 @@ use DPOUtils;
 use DPOMPC;
 use DPOEvents;
 use DPOEnvVars;
+use DPOLog;
 
 package DPOMpb;
 
@@ -129,8 +130,6 @@ sub load_non_compliant_dependencies
                     my $level = 1;
                     foreach my $foreign_mpb (@foreign_mpbs)
                     {
-                        print "FFFF - $foreign_mpb\n";
-
                         my $found = 0;
                         foreach my $x (@mpc_related_includes)
                         {
@@ -221,6 +220,8 @@ sub load_non_compliant_dependencies
                 }
                 else
                 {
+                    DPOLog::report_msg(DPOEvents::CANT_GET_PRODUCT, ["ACE"]);
+                    return 0;
                 }
             }
         }
