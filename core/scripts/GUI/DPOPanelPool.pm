@@ -155,12 +155,12 @@ sub new {
         unless defined $style;
 
     $self = $self->SUPER::new( $parent, $id, $pos, $size, $style, $name );
+    $self->{text_ctrl_current_pool_root} = Wx::TextCtrl->new($self, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+    $self->{button_pool_switch} = Wx::Button->new($self, wxID_ANY, _T("Switch..."));
+    $self->{button_load_pool} = Wx::Button->new($self, wxID_ANY, _T("Load"));
+    $self->{sizer_current_pool_staticbox} = Wx::StaticBox->new($self, wxID_ANY, _T("Current pool (defined by DPO_POOL_ROOT)") );
     $self->{notebook_pool_operations} = Wx::Notebook->new($self, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
     $self->{notebook_pool_operations_activation} = Wx::Panel->new($self->{notebook_pool_operations}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
-    $self->{text_ctrl_current_pool_root} = Wx::TextCtrl->new($self->{notebook_pool_operations_activation}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
-    $self->{button_pool_switch} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Switch..."));
-    $self->{button_load_pool} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Load"));
-    $self->{sizer_current_pool_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Current pool (defined by DPO_POOL_ROOT)") );
     $self->{combo_box_pool_products_names} = Wx::ComboBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{sizer_163_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Name") );
     $self->{combo_box_pool_products_versions} = Wx::ComboBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
@@ -373,7 +373,7 @@ sub __set_properties {
 sub __do_layout {
     my $self = shift;
     # begin wxGlade: DPOPanelPool::__do_layout
-    $self->{sizer_pool} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_pool} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_136} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_139_staticbox}->Lower();
     $self->{sizer_139} = Wx::StaticBoxSizer->new($self->{sizer_139_staticbox}, wxHORIZONTAL);
@@ -442,7 +442,7 @@ sub __do_layout {
     $self->{sizer_current_pool}->Add($self->{text_ctrl_current_pool_root}, 1, 0, 0);
     $self->{sizer_current_pool}->Add($self->{button_pool_switch}, 0, wxLEFT, 3);
     $self->{sizer_current_pool}->Add($self->{button_load_pool}, 0, wxLEFT, 5);
-    $self->{sizer_product_activation}->Add($self->{sizer_current_pool}, 0, wxALL|wxEXPAND, 5);
+    $self->{sizer_pool}->Add($self->{sizer_current_pool}, 0, wxALL|wxEXPAND, 5);
     $self->{sizer_163}->Add($self->{combo_box_pool_products_names}, 1, 0, 0);
     $self->{sizer_162}->Add($self->{sizer_163}, 1, wxEXPAND, 0);
     $self->{sizer_164}->Add($self->{combo_box_pool_products_versions}, 1, 0, 0);
@@ -552,7 +552,7 @@ sub __do_layout {
     $self->{notebook_pool_operations}->AddPage($self->{notebook_pool_operations_packaging}, _T("Packaging"));
     $self->{notebook_pool_operations}->AddPage($self->{notebook_pool_operations_impact}, _T("Impact"));
     $self->{notebook_pool_operations}->AddPage($self->{notebook_pool_operations_backup}, _T("Backup"));
-    $self->{sizer_pool}->Add($self->{notebook_pool_operations}, 2, wxEXPAND, 0);
+    $self->{sizer_pool}->Add($self->{notebook_pool_operations}, 2, wxTOP|wxEXPAND, 10);
     $self->SetSizer($self->{sizer_pool});
     $self->{sizer_pool}->Fit($self);
     # end wxGlade
