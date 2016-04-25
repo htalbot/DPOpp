@@ -6,6 +6,7 @@ use DPOUtils;
 use DPOMPC;
 use DPOEvents;
 use DPOEnvVars;
+use DPOLog;
 
 package DPOMpb;
 
@@ -219,6 +220,8 @@ sub load_non_compliant_dependencies
                 }
                 else
                 {
+                    DPOLog::report_msg(DPOEvents::CANT_GET_PRODUCT, ["ACE"]);
+                    return 0;
                 }
             }
         }
