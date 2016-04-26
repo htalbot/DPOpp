@@ -151,7 +151,7 @@ sub new {
     $name   = ""                 unless defined $name;
 
     # begin wxGlade: DPOPanelPool::new
-    $style = wxTAB_TRAVERSAL 
+    $style = wxTAB_TRAVERSAL
         unless defined $style;
 
     $self = $self->SUPER::new( $parent, $id, $pos, $size, $style, $name );
@@ -183,16 +183,15 @@ sub new {
     $self->{sizer_project_activation_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Project activation from DPO pool (defined by DPO_POOL_ROOT)") );
     $self->{notebook_pool_operations_packaging} = Wx::Panel->new($self->{notebook_pool_operations}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
     $self->{notebook_creating_package_from} = Wx::Notebook->new($self->{notebook_pool_operations_packaging}, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
-    $self->{notebook_11_pane_1} = Wx::Panel->new($self->{notebook_creating_package_from}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
-    $self->{text_ctrl_create_package_manifest_file} = Wx::TextCtrl->new($self->{notebook_11_pane_1}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, );
-    $self->{button_create_package_manifest_file_open} = Wx::Button->new($self->{notebook_11_pane_1}, wxID_ANY, _T("Open..."));
-    $self->{sizer_135_staticbox} = Wx::StaticBox->new($self->{notebook_11_pane_1}, wxID_ANY, _T("Manifest file") );
     $self->{notebook_creating_package_from_pane_2} = Wx::Panel->new($self->{notebook_creating_package_from}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
-    $self->{button_packaging_load_products} = Wx::Button->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, _T("Load products"));
     $self->{combo_box_packaging_products} = Wx::ComboBox->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{combo_box_packaging_product_versions} = Wx::ComboBox->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{button_packaging_open_product} = Wx::Button->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, _T("Open"));
     $self->{sizer_125_staticbox} = Wx::StaticBox->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, _T("Product") );
+    $self->{notebook_11_pane_1} = Wx::Panel->new($self->{notebook_creating_package_from}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
+    $self->{text_ctrl_create_package_manifest_file} = Wx::TextCtrl->new($self->{notebook_11_pane_1}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, );
+    $self->{button_create_package_manifest_file_open} = Wx::Button->new($self->{notebook_11_pane_1}, wxID_ANY, _T("Open..."));
+    $self->{sizer_135_staticbox} = Wx::StaticBox->new($self->{notebook_11_pane_1}, wxID_ANY, _T("Manifest file") );
     $self->{sizer_132_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_packaging}, wxID_ANY, _T("Creating package from...") );
     $self->{notebook_elements} = Wx::Notebook->new($self->{notebook_pool_operations_packaging}, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
     $self->{notebook_elements_pane_bin} = Wx::Panel->new($self->{notebook_elements}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
@@ -249,6 +248,7 @@ sub new {
     Wx::Event::EVT_BUTTON($self, $self->{button_pool_switch}->GetId, \&on_button_pool_switch);
     Wx::Event::EVT_BUTTON($self, $self->{button_load_pool}->GetId, \&on_button_load_pool);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_pool_products_names}->GetId, \&on_combo_box_pool_products_names);
+    Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_pool_products_versions}->GetId, \&on_combo_box_pool_products_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_according_specific_product}->GetId, \&on_button_activate_according_specific_product);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_expand_all}->GetId, \&on_button_activation_expand_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_collapse_all}->GetId, \&on_button_activation_collapse_all);
@@ -260,11 +260,10 @@ sub new {
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_last_versions}->GetId, \&on_button_activate_last_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate}->GetId, \&on_button_activate);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_project}->GetId, \&on_button_activate_project);
-    Wx::Event::EVT_BUTTON($self, $self->{button_create_package_manifest_file_open}->GetId, \&on_button_create_package_manifest_file_open);
-    Wx::Event::EVT_BUTTON($self, $self->{button_packaging_load_products}->GetId, \&on_button_packaging_load_products);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_packaging_products}->GetId, \&on_combo_box_packaging_products);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_packaging_product_versions}->GetId, \&on_combo_box_packaging_product_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_packaging_open_product}->GetId, \&on_button_packaging_open_product);
+    Wx::Event::EVT_BUTTON($self, $self->{button_create_package_manifest_file_open}->GetId, \&on_button_create_package_manifest_file_open);
     Wx::Event::EVT_LIST_ITEM_RIGHT_CLICK($self, $self->{list_ctrl_lib}->GetId, \&on_list_ctrl_lib_right_click);
     Wx::Event::EVT_BUTTON($self, $self->{button_packaging_include_deep_deps}->GetId, \&on_button_packaging_include_deep_deps);
     Wx::Event::EVT_LIST_ITEM_RIGHT_CLICK($self, $self->{list_ctrl_bin}->GetId, \&on_list_ctrl_bin_right_click);
@@ -411,12 +410,12 @@ sub __do_layout {
     $self->{sizer_130} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_132_staticbox}->Lower();
     $self->{sizer_132} = Wx::StaticBoxSizer->new($self->{sizer_132_staticbox}, wxHORIZONTAL);
-    $self->{sizer_133} = Wx::BoxSizer->new(wxHORIZONTAL);
-    $self->{sizer_125_staticbox}->Lower();
-    $self->{sizer_125} = Wx::StaticBoxSizer->new($self->{sizer_125_staticbox}, wxHORIZONTAL);
     $self->{sizer_134} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_135_staticbox}->Lower();
     $self->{sizer_135} = Wx::StaticBoxSizer->new($self->{sizer_135_staticbox}, wxHORIZONTAL);
+    $self->{sizer_133} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_125_staticbox}->Lower();
+    $self->{sizer_125} = Wx::StaticBoxSizer->new($self->{sizer_125_staticbox}, wxHORIZONTAL);
     $self->{sizer_activation} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_project_activation_staticbox}->Lower();
     $self->{sizer_project_activation} = Wx::StaticBoxSizer->new($self->{sizer_project_activation_staticbox}, wxVERTICAL);
@@ -446,7 +445,7 @@ sub __do_layout {
     $self->{sizer_163}->Add($self->{combo_box_pool_products_names}, 1, 0, 0);
     $self->{sizer_162}->Add($self->{sizer_163}, 1, wxEXPAND, 0);
     $self->{sizer_164}->Add($self->{combo_box_pool_products_versions}, 1, 0, 0);
-    $self->{sizer_162}->Add($self->{sizer_164}, 1, wxEXPAND, 0);
+    $self->{sizer_162}->Add($self->{sizer_164}, 1, wxLEFT|wxEXPAND, 5);
     $self->{sizer_161}->Add($self->{sizer_162}, 1, wxALIGN_CENTER_VERTICAL, 0);
     $self->{sizer_161}->Add($self->{button_activate_according_specific_product}, 0, wxALL|wxALIGN_BOTTOM, 5);
     $self->{sizer_product_activation}->Add($self->{sizer_161}, 0, wxALL|wxEXPAND, 5);
@@ -467,22 +466,21 @@ sub __do_layout {
     $self->{sizer_product_activation_actions}->Add($self->{button_activate}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 10);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_product_activation_actions}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     $self->{sizer_product_activation}->Add($self->{sizer_product_activation_working_trees}, 1, wxALL|wxEXPAND, 5);
-    $self->{sizer_activation}->Add($self->{sizer_product_activation}, 1, wxEXPAND, 0);
+    $self->{sizer_activation}->Add($self->{sizer_product_activation}, 1, wxALL|wxEXPAND, 10);
     $self->{sizer_project_activation}->Add($self->{button_activate_project}, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 5);
-    $self->{sizer_activation}->Add($self->{sizer_project_activation}, 0, wxALL|wxEXPAND, 5);
+    $self->{sizer_activation}->Add($self->{sizer_project_activation}, 0, wxLEFT|wxRIGHT|wxBOTTOM|wxEXPAND, 10);
     $self->{notebook_pool_operations_activation}->SetSizer($self->{sizer_activation});
+    $self->{sizer_125}->Add($self->{combo_box_packaging_products}, 1, wxLEFT|wxALIGN_CENTER_VERTICAL, 3);
+    $self->{sizer_125}->Add($self->{combo_box_packaging_product_versions}, 0, wxLEFT|wxALIGN_CENTER_VERTICAL, 3);
+    $self->{sizer_125}->Add($self->{button_packaging_open_product}, 0, wxLEFT|wxALIGN_BOTTOM, 3);
+    $self->{sizer_133}->Add($self->{sizer_125}, 1, wxALL, 10);
+    $self->{notebook_creating_package_from_pane_2}->SetSizer($self->{sizer_133});
     $self->{sizer_135}->Add($self->{text_ctrl_create_package_manifest_file}, 1, 0, 0);
     $self->{sizer_135}->Add($self->{button_create_package_manifest_file_open}, 0, wxLEFT, 5);
     $self->{sizer_134}->Add($self->{sizer_135}, 1, wxALL, 10);
     $self->{notebook_11_pane_1}->SetSizer($self->{sizer_134});
-    $self->{sizer_125}->Add($self->{button_packaging_load_products}, 0, 0, 0);
-    $self->{sizer_125}->Add($self->{combo_box_packaging_products}, 1, wxLEFT, 3);
-    $self->{sizer_125}->Add($self->{combo_box_packaging_product_versions}, 0, wxLEFT, 3);
-    $self->{sizer_125}->Add($self->{button_packaging_open_product}, 0, wxLEFT, 3);
-    $self->{sizer_133}->Add($self->{sizer_125}, 1, wxALL, 10);
-    $self->{notebook_creating_package_from_pane_2}->SetSizer($self->{sizer_133});
-    $self->{notebook_creating_package_from}->AddPage($self->{notebook_11_pane_1}, _T("Existing manifest"));
     $self->{notebook_creating_package_from}->AddPage($self->{notebook_creating_package_from_pane_2}, _T("Product defintion"));
+    $self->{notebook_creating_package_from}->AddPage($self->{notebook_11_pane_1}, _T("Existing manifest"));
     $self->{sizer_132}->Add($self->{notebook_creating_package_from}, 1, wxEXPAND, 0);
     $self->{sizer_106}->Add($self->{sizer_132}, 0, wxALL|wxEXPAND, 10);
     $self->{sizer_121}->Add($self->{list_ctrl_lib}, 1, wxEXPAND, 0);
@@ -508,7 +506,7 @@ sub __do_layout {
     $self->{sizer_120}->Add($self->{notebook_elements}, 1, wxEXPAND, 0);
     $self->{sizer_119}->Add($self->{button_pakaging_add}, 0, 0, 0);
     $self->{sizer_120}->Add($self->{sizer_119}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-    $self->{sizer_106}->Add($self->{sizer_120}, 1, wxLEFT|wxRIGHT|wxEXPAND, 10);
+    $self->{sizer_106}->Add($self->{sizer_120}, 1, wxLEFT|wxRIGHT|wxBOTTOM|wxEXPAND, 10);
     $self->{sizer_116}->Add($self->{button_save_as_manifest}, 0, wxALL, 5);
     $self->{sizer_116}->Add($self->{button_create_package}, 0, wxALL, 5);
     $self->{sizer_106}->Add($self->{sizer_116}, 0, wxALIGN_CENTER_HORIZONTAL, 10);
@@ -516,7 +514,7 @@ sub __do_layout {
     $self->{sizer_153}->Add($self->{text_ctrl_impact_current_pool_root}, 1, 0, 0);
     $self->{sizer_153}->Add($self->{button_impact_switch}, 0, wxLEFT, 3);
     $self->{sizer_153}->Add($self->{button_impact_load}, 0, wxLEFT, 5);
-    $self->{sizer_149}->Add($self->{sizer_153}, 0, wxALL|wxEXPAND, 5);
+    $self->{sizer_149}->Add($self->{sizer_153}, 0, wxALL|wxEXPAND, 10);
     $self->{sizer_151}->Add($self->{combo_box_impact_product_name}, 0, 0, 0);
     $self->{sizer_150}->Add($self->{sizer_151}, 0, wxEXPAND, 0);
     $self->{sizer_155}->Add($self->{combo_box_impact_projects}, 0, 0, 0);
@@ -532,7 +530,7 @@ sub __do_layout {
     $self->{notebook_pool_operations_impact}->SetSizer($self->{sizer_148});
     $self->{sizer_141}->Add($self->{combo_box_rdiff_backup}, 1, 0, 0);
     $self->{sizer_141}->Add($self->{button_rdiff_backup_browse}, 0, wxLEFT, 3);
-    $self->{sizer_136}->Add($self->{sizer_141}, 0, wxEXPAND, 0);
+    $self->{sizer_136}->Add($self->{sizer_141}, 0, wxTOP|wxEXPAND, 10);
     $self->{sizer_137}->Add($self->{text_ctrl_local_pool}, 1, 0, 0);
     $self->{sizer_137}->Add($self->{button_local_pool_browse}, 0, wxLEFT, 3);
     $self->{sizer_142}->Add($self->{sizer_137}, 1, 0, 0);
@@ -919,7 +917,8 @@ sub fill_list_products
     }
 }
 
-sub fill_product_comboboxes
+
+sub fill_product_to_activate_combobox
 {
     my ($self, $path) = @_;
 
@@ -952,7 +951,54 @@ sub fill_product_comboboxes
                 push(@product_name_flavour, $item);
             }
         }
+
+        $self->{combo_box_pool_products_names}->SetBackgroundColour(Wx::Colour->new(255, 255, 0));
+        $self->Refresh();
     }
+}
+
+sub fill_product_to_package_combobox
+{
+    my ($self, $pool_dir) = @_;
+
+    my $wait = Wx::BusyCursor->new();
+
+    my @content;
+    if (!$self->get_all_products($pool_dir, \@content))
+    {
+        Wx::MessageBox("Failed to get all products");
+        return;
+    }
+
+    my %prods;
+
+    $self->{combo_box_packaging_products}->Clear();
+    foreach my $elem (@content)
+    {
+        my $text;
+        if ($elem =~ /(\d+.\d+.\d+)\/DPOProduct\.xml/)
+        {
+            my ($path, $product_name, $flavour) = $elem =~ /(.*)\/(.*)\/(.*)\/\d+\.\d+\.\d+\/DPOProduct\.xml/;
+            $text = "$product_name/$flavour";
+        }
+        else
+        {
+            my ($path, $product_name, $flavour) = $elem =~ /(.*)\/(.*)\/(.*)\/DPOProduct\.xml/;
+            $text = "$product_name/$flavour";
+        }
+
+        $self->{packaging_products}->{$text} = $elem;
+
+        $prods{$text} = "$text  ---  $elem";
+    }
+
+    foreach my $key (sort keys %prods)
+    {
+        $self->{combo_box_packaging_products}->Append($prods{$key});
+    }
+
+    $self->{combo_box_packaging_products}->SetBackgroundColour(Wx::Colour->new(255, 255, 0));
+    $self->Refresh();
 }
 
 sub sort_products
@@ -2465,7 +2511,8 @@ sub on_button_load_pool
     $self->sort_products();
     $self->fill_list_products();
 
-    $self->fill_product_comboboxes($pool_path);
+    $self->fill_product_to_activate_combobox($pool_path);
+    $self->fill_product_to_package_combobox($pool_path);
 
     # On some machines, the refresh is not done properly --> Show(0) + Show(1) fix the problem.
     $self->Show(0);
@@ -2732,67 +2779,6 @@ sub get_all_products
 
     return  1;
 }
-
-sub on_button_packaging_load_products
-{
-    my ($self, $event) = @_;
-
-    my $wait = Wx::BusyCursor->new();
-
-    my $pool_dir = DPOUtils::dpo_pool_dir();
-
-    my @content;
-    if (!$self->get_all_products($pool_dir, \@content))
-    {
-        Wx::MessageBox("Failed to get all products");
-        return;
-    }
-    else
-    {
-        #~ foreach my $elem (@content)
-        #~ {
-            #~ print "Product found: $elem\n";
-        #~ }
-    }
-
-    my %prods;
-
-    $self->{combo_box_packaging_products}->Clear();
-    foreach my $elem (@content)
-    {
-        my $text;
-        if ($elem =~ /(\d+.\d+.\d+)\/DPOProduct\.xml/)
-        {
-            my ($path, $product_name, $flavour) = $elem =~ /(.*)\/(.*)\/(.*)\/\d+\.\d+\.\d+\/DPOProduct\.xml/;
-            $text = "$product_name/$flavour";
-        }
-        else
-        {
-            my ($path, $product_name, $flavour) = $elem =~ /(.*)\/(.*)\/(.*)\/DPOProduct\.xml/;
-            $text = "$product_name/$flavour";
-        }
-
-        $self->{packaging_products}->{$text} = $elem;
-
-        $prods{$text} = "$text  ---  $elem";
-    }
-
-    foreach my $key (sort keys %prods)
-    {
-        $self->{combo_box_packaging_products}->Append($prods{$key});
-    }
-
-    $self->{combo_box_packaging_products}->SetBackgroundColour(Wx::Colour->new(255, 255, 0));
-    $self->Refresh();
-
-    return;
-
-    # wxGlade: DPOPanelPool::on_button_packaging_load_products <event_handler>
-    warn "Event handler (on_button_packaging_load_products) not implemented";
-    $event->Skip;
-    # end wxGlade
-}
-
 
 sub on_combo_box_packaging_products
 {
@@ -4326,6 +4312,10 @@ sub on_combo_box_pool_products_names
             $self->{combo_box_pool_products_versions}->Append($version);
             #~ print "      $version\n";
         }
+
+        $self->{combo_box_pool_products_versions}->SetBackgroundColour(Wx::Colour->new(255, 255, 0));
+        $self->{combo_box_pool_products_names}->SetBackgroundColour(Wx::Colour->new(255, 255, 255));
+        $self->Refresh();
     }
 
     return;
@@ -4400,6 +4390,22 @@ sub on_button_activate_last_versions
 
     # wxGlade: DPOPanelPool::on_button_activate_last_versions <event_handler>
     warn "Event handler (on_button_activate_last_versions) not implemented";
+    $event->Skip;
+    # end wxGlade
+}
+
+
+sub on_combo_box_pool_products_versions
+{
+    my ($self, $event) = @_;
+
+    $self->{combo_box_pool_products_versions}->SetBackgroundColour(Wx::Colour->new(255, 255, 255));
+    $self->Refresh();
+
+    return;
+
+    # wxGlade: DPOPanelPool::on_combo_box_pool_products_versions <event_handler>
+    warn "Event handler (on_combo_box_pool_products_versions) not implemented";
     $event->Skip;
     # end wxGlade
 }

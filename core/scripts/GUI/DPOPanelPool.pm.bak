@@ -183,16 +183,16 @@ sub new {
     $self->{sizer_project_activation_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Project activation from DPO pool (defined by DPO_POOL_ROOT)") );
     $self->{notebook_pool_operations_packaging} = Wx::Panel->new($self->{notebook_pool_operations}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
     $self->{notebook_creating_package_from} = Wx::Notebook->new($self->{notebook_pool_operations_packaging}, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
-    $self->{notebook_11_pane_1} = Wx::Panel->new($self->{notebook_creating_package_from}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
-    $self->{text_ctrl_create_package_manifest_file} = Wx::TextCtrl->new($self->{notebook_11_pane_1}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, );
-    $self->{button_create_package_manifest_file_open} = Wx::Button->new($self->{notebook_11_pane_1}, wxID_ANY, _T("Open..."));
-    $self->{sizer_135_staticbox} = Wx::StaticBox->new($self->{notebook_11_pane_1}, wxID_ANY, _T("Manifest file") );
     $self->{notebook_creating_package_from_pane_2} = Wx::Panel->new($self->{notebook_creating_package_from}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
     $self->{button_packaging_load_products} = Wx::Button->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, _T("Load products"));
     $self->{combo_box_packaging_products} = Wx::ComboBox->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{combo_box_packaging_product_versions} = Wx::ComboBox->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, [], wxCB_DROPDOWN);
     $self->{button_packaging_open_product} = Wx::Button->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, _T("Open"));
     $self->{sizer_125_staticbox} = Wx::StaticBox->new($self->{notebook_creating_package_from_pane_2}, wxID_ANY, _T("Product") );
+    $self->{notebook_11_pane_1} = Wx::Panel->new($self->{notebook_creating_package_from}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
+    $self->{text_ctrl_create_package_manifest_file} = Wx::TextCtrl->new($self->{notebook_11_pane_1}, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, );
+    $self->{button_create_package_manifest_file_open} = Wx::Button->new($self->{notebook_11_pane_1}, wxID_ANY, _T("Open..."));
+    $self->{sizer_135_staticbox} = Wx::StaticBox->new($self->{notebook_11_pane_1}, wxID_ANY, _T("Manifest file") );
     $self->{sizer_132_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_packaging}, wxID_ANY, _T("Creating package from...") );
     $self->{notebook_elements} = Wx::Notebook->new($self->{notebook_pool_operations_packaging}, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
     $self->{notebook_elements_pane_bin} = Wx::Panel->new($self->{notebook_elements}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
@@ -260,11 +260,11 @@ sub new {
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_last_versions}->GetId, \&on_button_activate_last_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate}->GetId, \&on_button_activate);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_project}->GetId, \&on_button_activate_project);
-    Wx::Event::EVT_BUTTON($self, $self->{button_create_package_manifest_file_open}->GetId, \&on_button_create_package_manifest_file_open);
     Wx::Event::EVT_BUTTON($self, $self->{button_packaging_load_products}->GetId, \&on_button_packaging_load_products);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_packaging_products}->GetId, \&on_combo_box_packaging_products);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_packaging_product_versions}->GetId, \&on_combo_box_packaging_product_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_packaging_open_product}->GetId, \&on_button_packaging_open_product);
+    Wx::Event::EVT_BUTTON($self, $self->{button_create_package_manifest_file_open}->GetId, \&on_button_create_package_manifest_file_open);
     Wx::Event::EVT_LIST_ITEM_RIGHT_CLICK($self, $self->{list_ctrl_lib}->GetId, \&on_list_ctrl_lib_right_click);
     Wx::Event::EVT_BUTTON($self, $self->{button_packaging_include_deep_deps}->GetId, \&on_button_packaging_include_deep_deps);
     Wx::Event::EVT_LIST_ITEM_RIGHT_CLICK($self, $self->{list_ctrl_bin}->GetId, \&on_list_ctrl_bin_right_click);
@@ -411,12 +411,12 @@ sub __do_layout {
     $self->{sizer_130} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_132_staticbox}->Lower();
     $self->{sizer_132} = Wx::StaticBoxSizer->new($self->{sizer_132_staticbox}, wxHORIZONTAL);
-    $self->{sizer_133} = Wx::BoxSizer->new(wxHORIZONTAL);
-    $self->{sizer_125_staticbox}->Lower();
-    $self->{sizer_125} = Wx::StaticBoxSizer->new($self->{sizer_125_staticbox}, wxHORIZONTAL);
     $self->{sizer_134} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_135_staticbox}->Lower();
     $self->{sizer_135} = Wx::StaticBoxSizer->new($self->{sizer_135_staticbox}, wxHORIZONTAL);
+    $self->{sizer_133} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_125_staticbox}->Lower();
+    $self->{sizer_125} = Wx::StaticBoxSizer->new($self->{sizer_125_staticbox}, wxHORIZONTAL);
     $self->{sizer_activation} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_project_activation_staticbox}->Lower();
     $self->{sizer_project_activation} = Wx::StaticBoxSizer->new($self->{sizer_project_activation_staticbox}, wxVERTICAL);
@@ -471,18 +471,18 @@ sub __do_layout {
     $self->{sizer_project_activation}->Add($self->{button_activate_project}, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 5);
     $self->{sizer_activation}->Add($self->{sizer_project_activation}, 0, wxALL|wxEXPAND, 5);
     $self->{notebook_pool_operations_activation}->SetSizer($self->{sizer_activation});
-    $self->{sizer_135}->Add($self->{text_ctrl_create_package_manifest_file}, 1, 0, 0);
-    $self->{sizer_135}->Add($self->{button_create_package_manifest_file_open}, 0, wxLEFT, 5);
-    $self->{sizer_134}->Add($self->{sizer_135}, 1, wxALL, 10);
-    $self->{notebook_11_pane_1}->SetSizer($self->{sizer_134});
     $self->{sizer_125}->Add($self->{button_packaging_load_products}, 0, 0, 0);
     $self->{sizer_125}->Add($self->{combo_box_packaging_products}, 1, wxLEFT, 3);
     $self->{sizer_125}->Add($self->{combo_box_packaging_product_versions}, 0, wxLEFT, 3);
     $self->{sizer_125}->Add($self->{button_packaging_open_product}, 0, wxLEFT, 3);
     $self->{sizer_133}->Add($self->{sizer_125}, 1, wxALL, 10);
     $self->{notebook_creating_package_from_pane_2}->SetSizer($self->{sizer_133});
-    $self->{notebook_creating_package_from}->AddPage($self->{notebook_11_pane_1}, _T("Existing manifest"));
+    $self->{sizer_135}->Add($self->{text_ctrl_create_package_manifest_file}, 1, 0, 0);
+    $self->{sizer_135}->Add($self->{button_create_package_manifest_file_open}, 0, wxLEFT, 5);
+    $self->{sizer_134}->Add($self->{sizer_135}, 1, wxALL, 10);
+    $self->{notebook_11_pane_1}->SetSizer($self->{sizer_134});
     $self->{notebook_creating_package_from}->AddPage($self->{notebook_creating_package_from_pane_2}, _T("Product defintion"));
+    $self->{notebook_creating_package_from}->AddPage($self->{notebook_11_pane_1}, _T("Existing manifest"));
     $self->{sizer_132}->Add($self->{notebook_creating_package_from}, 1, wxEXPAND, 0);
     $self->{sizer_106}->Add($self->{sizer_132}, 0, wxALL|wxEXPAND, 10);
     $self->{sizer_121}->Add($self->{list_ctrl_lib}, 1, wxEXPAND, 0);
@@ -919,7 +919,7 @@ sub fill_list_products
     }
 }
 
-sub fill_product_comboboxes
+sub fill_product_to_activate_comboboxes
 {
     my ($self, $path) = @_;
 
@@ -953,6 +953,59 @@ sub fill_product_comboboxes
             }
         }
     }
+}
+
+sub fill_product_to_package_comboboxes
+{
+    my ($self, $pool_dir) = @_;
+
+    my $wait = Wx::BusyCursor->new();
+
+    #~ my $pool_dir = DPOUtils::dpo_pool_dir();
+
+    my @content;
+    if (!$self->get_all_products($pool_dir, \@content))
+    {
+        Wx::MessageBox("Failed to get all products");
+        return;
+    }
+    else
+    {
+        #~ foreach my $elem (@content)
+        #~ {
+            #~ print "Product found: $elem\n";
+        #~ }
+    }
+
+    my %prods;
+
+    $self->{combo_box_packaging_products}->Clear();
+    foreach my $elem (@content)
+    {
+        my $text;
+        if ($elem =~ /(\d+.\d+.\d+)\/DPOProduct\.xml/)
+        {
+            my ($path, $product_name, $flavour) = $elem =~ /(.*)\/(.*)\/(.*)\/\d+\.\d+\.\d+\/DPOProduct\.xml/;
+            $text = "$product_name/$flavour";
+        }
+        else
+        {
+            my ($path, $product_name, $flavour) = $elem =~ /(.*)\/(.*)\/(.*)\/DPOProduct\.xml/;
+            $text = "$product_name/$flavour";
+        }
+
+        $self->{packaging_products}->{$text} = $elem;
+
+        $prods{$text} = "$text  ---  $elem";
+    }
+
+    foreach my $key (sort keys %prods)
+    {
+        $self->{combo_box_packaging_products}->Append($prods{$key});
+    }
+
+    $self->{combo_box_packaging_products}->SetBackgroundColour(Wx::Colour->new(255, 255, 0));
+    $self->Refresh();
 }
 
 sub sort_products
@@ -2465,7 +2518,8 @@ sub on_button_load_pool
     $self->sort_products();
     $self->fill_list_products();
 
-    $self->fill_product_comboboxes($pool_path);
+    $self->fill_product_to_activate_comboboxes($pool_path);
+    $self->fill_product_to_package_comboboxes($pool_path);
 
     # On some machines, the refresh is not done properly --> Show(0) + Show(1) fix the problem.
     $self->Show(0);
