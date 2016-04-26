@@ -151,7 +151,7 @@ sub new {
     $name   = ""                 unless defined $name;
 
     # begin wxGlade: DPOPanelPool::new
-    $style = wxTAB_TRAVERSAL
+    $style = wxTAB_TRAVERSAL 
         unless defined $style;
 
     $self = $self->SUPER::new( $parent, $id, $pos, $size, $style, $name );
@@ -448,7 +448,7 @@ sub __do_layout {
     $self->{sizer_164}->Add($self->{combo_box_pool_products_versions}, 1, 0, 0);
     $self->{sizer_162}->Add($self->{sizer_164}, 1, wxEXPAND, 0);
     $self->{sizer_161}->Add($self->{sizer_162}, 1, wxALIGN_CENTER_VERTICAL, 0);
-    $self->{sizer_161}->Add($self->{button_activate_according_specific_product}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
+    $self->{sizer_161}->Add($self->{button_activate_according_specific_product}, 0, wxALL|wxALIGN_BOTTOM, 5);
     $self->{sizer_product_activation}->Add($self->{sizer_161}, 0, wxALL|wxEXPAND, 5);
     $self->{sizer_124}->Add($self->{tree_ctrl_pool}, 1, wxEXPAND, 0);
     $self->{sizer_143}->Add($self->{button_activation_expand_all}, 0, wxALL, 5);
@@ -923,12 +923,15 @@ sub fill_product_comboboxes
 {
     my ($self, $path) = @_;
 
+    $self->{products_to_activate_dependencies} = {};
+
     my @products;
     if ($self->get_products($path, \@products))
     {
         if (scalar(@products) != 0)
         {
             $self->{combo_box_pool_products_names}->Clear();
+            $self->{combo_box_pool_products_versions}->Clear();
         }
 
         my @product_name_flavour;
@@ -1984,8 +1987,14 @@ sub activate_products
 {
     my ($self, $pool_products_ref, $products_to_activate_strings_ref) = @_;
 
-    my @list_env_vars_to_del;
     my @list_env_vars_to_set;
+
+    if (defined($self->{frame}->{panel_product}->{this_product})
+        && $self->{frame}->{panel_product}->{this_product} ne "")
+    {
+        Wx::MessageBox("The product will be closed", "", Wx::wxOK | Wx::wxICON_INFORMATION);
+        $self->{frame}->{panel_product}->close_product();
+    }
 
     my @processed;
     my @failures;
@@ -2048,15 +2057,6 @@ sub activate_products
     {
         # TO_DO
         return 0;
-    }
-
-    if (scalar(@list_env_vars_to_del) != 0)
-    {
-        foreach my $env_var (@list_env_vars_to_del)
-        {
-            print "Delete env var: $env_var->{name}\n";
-        }
-        DPOEnvVars::system_del_env_vars(\@list_env_vars_to_del);
     }
 
     if (scalar(@list_env_vars_to_set) != 0)
@@ -2334,8 +2334,6 @@ sub get_prods_and_projs_to_activate
 
     my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
 
-    my %env_vars_to_set;
-    my %env_vars_to_del;
     if ($pool_product->{dpo_compliant_product}->{value})
     {
         my $versions_log = "$path/dpo_versions.log";
@@ -2364,28 +2362,28 @@ sub get_prods_and_projs_to_activate
         {
             my $env_var_id = uc($block_project->{project_name}) . "_PRJ_ROOT";
             my $env_var_value = "$path/modules/$block_project->{project_name}/$block_project->{version}";
-            if ($block_project->{status} eq "X")
+            if ($block_project->{status} ne "X")
             {
-                if (exists $env_vars_to_set{$env_var_id})
-                {
-                    delete $env_vars_to_set{$env_var_id};
-                    $env_vars_to_del{$env_var_id} = $env_var_value;
-                }
-            }
-            else
-            {
-                if (exists $env_vars_to_del{$env_var_id})
-                {
-                    delete $env_vars_to_del{$env_var_id};
-                }
-
-                $env_vars_to_set{$env_var_id} = $env_var_value;
-
                 # Extract dependencies (build and runtime) recursively
                 my $file = "$env_var_value/DPOProject.xml";
 
                 if (-f $file)
                 {
+                    foreach my $x (@$prods_projs_to_activate_ref)
+                    {
+                        if ($x->{name} eq $block_project->{project_name})
+                        {
+                            next;
+                        }
+                    }
+
+                    my $prod_proj_to_activate = ProductProjectToActivate->new($block_project->{project_name});
+                    push(@$prods_projs_to_activate_ref, $prod_proj_to_activate);
+
+                    $prod_proj_to_activate->{path} = $env_var_value;
+                    $prod_proj_to_activate->{type} = "project";
+
+
                     my $err;
                     my $config = DPOProjectConfig->new($file, \$err);
                     if ($config)
@@ -2418,6 +2416,9 @@ sub get_prods_and_projs_to_activate
                 }
             }
         }
+
+        my $env_var = DPOEnvVar->new(uc($pool_product->{name}) . "_ROOT", $path);
+        push(@$list_env_vars_to_set_ref, $env_var);
     }
     else
     {
@@ -2620,14 +2621,6 @@ sub on_button_activate
         Wx::MessageBox("More than one selection for:\n\n$text", "", Wx::wxOK | Wx::wxICON_ERROR);
         return;
     }
-
-    if (defined($self->{frame}->{panel_product}->{this_product})
-        && $self->{frame}->{panel_product}->{this_product} ne "")
-    {
-        Wx::MessageBox("The product will be closed", "", Wx::wxOK | Wx::wxICON_INFORMATION);
-        $self->{frame}->{panel_product}->close_product();
-    }
-
 
     my $pool_path = $self->{text_ctrl_current_pool_root}->GetValue();
 
