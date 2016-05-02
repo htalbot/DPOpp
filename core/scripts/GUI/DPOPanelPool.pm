@@ -176,7 +176,8 @@ sub new {
     $self->{button_activation_deselect_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Deselect all"));
     $self->{button_activation_remove_from_list} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Remove from list"));
     $self->{button_activate_last_versions} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate last versions"));
-    $self->{button_activate} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate"));
+    $self->{button_activate} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate selection"));
+    $self->{button_deactivate} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Deactivate selection"));
     $self->{sizer_product_activation_working_trees_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activation of any products") );
     $self->{sizer_product_activation_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Product activation from DPO pool (defined by DPO_POOL_ROOT) ") );
     $self->{button_activate_project} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate a project..."));
@@ -259,6 +260,7 @@ sub new {
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_remove_from_list}->GetId, \&on_button_activation_remove_from_list);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_last_versions}->GetId, \&on_button_activate_last_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate}->GetId, \&on_button_activate);
+    Wx::Event::EVT_BUTTON($self, $self->{button_deactivate}->GetId, \&on_button_deactivate);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_project}->GetId, \&on_button_activate_project);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_packaging_products}->GetId, \&on_combo_box_packaging_products);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_packaging_product_versions}->GetId, \&on_combo_box_packaging_product_versions);
@@ -464,6 +466,7 @@ sub __do_layout {
     $self->{sizer_product_activation_actions}->Add($self->{button_activation_remove_from_list}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
     $self->{sizer_product_activation_actions}->Add($self->{button_activate_last_versions}, 0, wxTOP, 5);
     $self->{sizer_product_activation_actions}->Add($self->{button_activate}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 10);
+    $self->{sizer_product_activation_actions}->Add($self->{button_deactivate}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_product_activation_actions}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     $self->{sizer_product_activation}->Add($self->{sizer_product_activation_working_trees}, 1, wxALL|wxEXPAND, 5);
     $self->{sizer_activation}->Add($self->{sizer_product_activation}, 1, wxALL|wxEXPAND, 10);
@@ -2610,6 +2613,8 @@ sub on_button_activate
 
     my $wait = Wx::BusyCursor->new();
 
+    $self->{frame}->{list_ctrl_msg}->DeleteAllItems();
+
     my @products_to_activate;
     my @names;
     my @multiple_names;
@@ -2676,8 +2681,7 @@ sub on_button_activate
     {
         if (!$self->activate_products(\@pool_products, \@products_to_activate))
         {
-            # TO_DO
-            Wx::MessageBox("Can't activate");
+            Wx::MessageBox("Can't activate", "", Wx::wxOK | Wx::wxICON_ERROR);
             return;
         }
     }
@@ -2690,6 +2694,21 @@ sub on_button_activate
 
     # wxGlade: DPOPanelPool::on_button_activate <event_handler>
     warn "Event handler (on_button_activate) not implemented";
+    $event->Skip;
+    # end wxGlade
+}
+
+
+sub on_button_deactivate
+{
+    my ($self, $event) = @_;
+
+    Wx::MessageBox("Not implemented yet");
+
+    return;
+
+    # wxGlade: DPOPanelPool::on_button_deactivate <event_handler>
+    warn "Event handler (on_button_deactivate) not implemented";
     $event->Skip;
     # end wxGlade
 }
@@ -4331,6 +4350,10 @@ sub on_button_activate_according_specific_product
 {
     my ($self, $event) = @_;
 
+    my $wait = Wx::BusyCursor->new();
+
+    $self->{frame}->{list_ctrl_msg}->DeleteAllItems();
+
     my $product_name_flavour = $self->{combo_box_pool_products_names}->GetValue();
     if ($product_name_flavour eq "")
     {
@@ -4363,7 +4386,7 @@ sub on_button_activate_according_specific_product
 
                 if (!$self->activate_products(\@pool_products, \@products_to_activate))
                 {
-                    Wx::MessageBox("Can't activate");
+                    Wx::MessageBox("Can't activate", "", Wx::wxOK | Wx::wxICON_ERROR);
                     return;
                 }
                 last; # Only one product to activate
@@ -4409,6 +4432,8 @@ sub on_combo_box_pool_products_versions
     $event->Skip;
     # end wxGlade
 }
+
+
 
 # end of class DPOPanelPool
 

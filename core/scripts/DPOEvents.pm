@@ -126,6 +126,7 @@ use constant GET_DEP_TO_ACTIVATE => 117;
 use constant GET_DEP_TO_ACTIVATE_FROM_RUNTIME => 118;
 use constant NOT_DEFINED_AS_POOL => 119;
 use constant GET_VERSIONS_BLOCKS_FAILURE => 120;
+use constant PROJECT_WITH_UNDEFINED_DEP_TYPE => 121;
 
 sub new
 {
@@ -859,6 +860,12 @@ sub new
                                     EVENT_TYPE_ERROR,
                                     "Can't extract versions from %s).",
                                     1); # number of parameters
+
+    $self->{+PROJECT_WITH_UNDEFINED_DEP_TYPE} = DPOEvent->new(
+                                    PROJECT_WITH_UNDEFINED_DEP_TYPE,
+                                    EVENT_TYPE_ERROR,
+                                    "Working project %s has %s dependency with undefined type %d.",
+                                    3); # number of parameters
 
     return $self;
 }

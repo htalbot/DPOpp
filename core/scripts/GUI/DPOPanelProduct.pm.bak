@@ -159,6 +159,7 @@ use constant
 my $col_red = Wx::Colour->new(255, 0, 0);
 my $col_black = Wx::Colour->new(0, 0, 0);
 my $col_white = Wx::Colour->new(255, 255, 255);
+my $col_yellow = Wx::Colour->new(255, 255, 0);
 my $col_executable_dep = Wx::Colour->new(219, 219, 112);
 
 
@@ -1104,7 +1105,7 @@ sub load_projects_in_product
         return 0;
     }
 
-    my @listEnvVarValues; # missing env_var
+    my @listEnvVarValues;
     foreach my $x (sort @{$self->{product_projects_paths}})
     {
         $x =~ s/\\/\//g;
@@ -1665,9 +1666,7 @@ sub load_project_dependencies
                     return 0;
                 }
 
-                my $dpo_mpb = DPOMpb->new($new_project->{dpo_compliant}->{product_name},
-                                            $new_project->{dpo_compliant}->{product_flavour},
-                                            $new_project->{name}, # lib_id
+                my $dpo_mpb = DPOMpb->new($new_project->{name}, # lib_id
                                             $new_project->{dpo_compliant}->{mpb}, # mpb name
                                             $new_project->{dpo_compliant}->{mpc_includes});
 
@@ -1822,8 +1821,8 @@ sub fill_tree_runtime
         {
             $flavour = "-$runtime_product_compliant->{flavour}";
         }
-        #~ my $item = $tree_ctrl->AppendItem($root, "$runtime_product_compliant->{name}-$runtime_product_compliant->{version}$flavour");
-        my $item = $tree_ctrl->AppendItem($root, "$runtime_product_compliant->{name}");
+        my $item = $tree_ctrl->AppendItem($root, "$runtime_product_compliant->{name}-$runtime_product_compliant->{version}$flavour");
+        #~ my $item = $tree_ctrl->AppendItem($root, "$runtime_product_compliant->{name}");
 
         foreach my $project_dependency (@{$runtime_product_compliant->{dpo_project_dependencies}})
         {
@@ -1964,32 +1963,33 @@ sub fill_tree_dependencies
     my @non_compliant_dep;
     foreach my $dependency (sort {$a->{name} cmp $b->{name}} @array)
     {
-        my $proj;
-        $self->get_project($dependency->{name}, \$proj);
-
         my $add = 1;
 
         my $type_text = "";
 
-        if ($proj->{type} == 4)
+        if ($dependency->{type} == 4)
         {
             $type_text = " (???)";
         }
-        if ($proj->{type} == 5)
+        if ($dependency->{type} == 5)
         {
             $type_text = " (static)";
         }
-        if ($proj->{type} == 6)
+        if ($dependency->{type} == 6)
         {
             $type_text = " (dynamic)";
         }
-        if ($proj->{type} == 7)
+        if ($dependency->{type} == 7)
         {
             $type_text = " (static/dynamic)";
         }
 
         if ($add)
         {
+            # Cast dependency to project
+            my $proj;
+            $self->get_project($dependency->{name}, \$proj);
+
             my $item = $tree_ctrl->AppendItem($item_parent, "$proj->{name}-$proj->{target_version}$type_text");
             $self->fill_tree_dependencies($tree_ctrl, $item, $proj);
         }
@@ -2304,13 +2304,13 @@ sub fill_non_product_projects
 
 sub validate
 {
-    my ($self) = @_;
+    my ($self, $clear_msg) = @_;
 
     my $actions = DPOActions->new(
                         DPOActions::ACTION_VALIDATE,
                         $self);
 
-    my $rc = $actions->go();
+    my $rc = $actions->go($clear_msg);
 
     return $rc;
 }
@@ -2337,8 +2337,8 @@ sub save_project
                         $project->{name},
                         \$path))
         {
-            DPOLog::report_msg(DPOEvents::GET_PATH_FAILURE, [$project->{name}, "$self->{this_product}->{path}/projects"]);
-            return 0;
+            # Not a project of the product. Must not save (the project itself must be revisited).
+            return 1;
         }
     }
 
@@ -2471,6 +2471,8 @@ sub load_working_project
         $self->{text_ctrl_working_project_target_version}->ChangeValue($self->{working_project}->{target_version});
         if ($self->{working_project}->is_library())
         {
+            $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_exec}, 0);
+
             $self->{sizer_type_staticbox}->Show(1);
             $self->{checkbox_dynamic}->Enable(1);
             $self->{checkbox_static}->Enable(1);
@@ -2510,6 +2512,9 @@ sub load_working_project
                     $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_static}, 0);
                 }
             }
+
+            $self->{tree_ctrl_working_project_dynamic}->Enable(1);
+            $self->{tree_ctrl_working_project_static}->Enable(1);
         }
         else
         {
@@ -2517,11 +2522,10 @@ sub load_working_project
             $self->{sizer_type_staticbox}->Show(0);
             $self->{checkbox_dynamic}->Show(0);
             $self->{checkbox_static}->Show(0);
+            $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_dynamic}, 0);
             $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_static}, 0);
+            $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_exec}, 1);
         }
-
-        $self->{tree_ctrl_working_project_dynamic}->Enable(1);
-        $self->{tree_ctrl_working_project_static}->Enable(1);
 
         $self->fill_tree_working();
 
@@ -2548,7 +2552,8 @@ sub fill_tree_working
         $self->fill_tree_working_ext(
                     $self->{working_project},
                     $self->{tree_ctrl_working_project_dynamic},
-                    $self->{tree_ctrl_working_project_static})
+                    $self->{tree_ctrl_working_project_static},
+                    $self->{tree_ctrl_working_project_exe})
     }
 }
 
@@ -2564,6 +2569,7 @@ sub fill_tree_working_ext
     else
     {
         if ($tree_dynamic != $self->{tree_ctrl_working_project_dynamic}
+            || $self->{checkbox_dynamic}->GetValue() == 0
             || $self->{checkbox_dynamic}->GetValue() == 1
             || $self->{working_project}->is_header_impl_or_abstract_class())
         {
@@ -2599,33 +2605,29 @@ sub fill_tree_working_spec
 
     foreach my $dep (sort {$a->{name} cmp $b->{name}} @{$dependencies})
     {
-        my $proj;
-        $self->get_project($dep->{name}, \$proj);
-
-        $proj->{type} = $dep->{type};
-
         my $type_text="";
-        if ($proj->is_executable())
+        if ($dep->{type} == 0
+            || $dep->{type} == 1)
         {
             $type_text = " (excutable)";
         }
-        if ($proj->{type} == 4)
+        if ($dep->{type} == 4)
         {
             $type_text = " (???)";
         }
-        if ($proj->{type} == 5)
+        if ($dep->{type} == 5)
         {
             $type_text = " (static)";
         }
-        if ($proj->{type} == 6)
+        if ($dep->{type} == 6)
         {
             $type_text = " (dynamic)";
         }
-        if ($proj->{type} == 7)
+        if ($dep->{type} == 7)
         {
-            $type_text = " (??? dynamic/static ???)";
+            $type_text = " (dynamic/static)";
         }
-        if ($proj->{type} == 8)
+        if ($dep->{type} == 8)
         {
             if ($type eq "dynamic")
             {
@@ -2636,6 +2638,10 @@ sub fill_tree_working_spec
                 $type_text = " (static)";
             }
         }
+
+        # Cast dependency to project
+        my $proj;
+        $self->get_project($dep->{name}, \$proj);
 
         my $item = $tree_ctrl->AppendItem($root, "$proj->{name}-$proj->{target_version}$type_text");
         if ($proj->is_executable())
@@ -3172,11 +3178,66 @@ sub remove_working_project_dependencies
     {
         @{$self->{working_project}->{dependencies_when_dynamic}} = grep { "$_->{name}-$_->{target_version}" ne "$x->{name}-$x->{target_version}" } @{$self->{working_project}->{dependencies_when_dynamic}};
         @{$self->{working_project}->{dependencies_when_static}} = grep { "$_->{name}-$_->{target_version}" ne "$x->{name}-$x->{target_version}" } @{$self->{working_project}->{dependencies_when_static}};
+
+        if (!$self->more_than_one_ref($x, $self->{workspace_projects}))
+        {
+            @{$self->{loaded_projects}} = grep { "$_->{name}-$_->{version}" ne "$x->{name}-$x->{version}" } @{$self->{loaded_projects}};
+        }
     }
 
     $self->save_working_project(0);
 
     $self->fill_tree_working();
+}
+
+sub more_than_one_ref
+{
+    my ($self, $proj, $array, $count_ref) = @_;
+
+    if (!defined($count_ref))
+    {
+        $$count_ref = 0;
+    }
+
+    foreach my $x (@{$array})
+    {
+        if ($x->{name} eq $proj->{name}
+            && $x->{version} eq $proj->{version})
+        {
+            $$count_ref++;
+        }
+
+        if ($$count_ref > 1)
+        {
+            return 1;
+        }
+
+        my $project;
+        if ($self->get_project($x->{name}, \$project))
+        {
+            my @deps;
+            foreach my $dep (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}})
+            {
+                if (!List::MoreUtils::any {"$_->{name}-$_->{version}" eq "$dep->{name}-$dep->{version}"} @deps)
+                {
+                    push(@deps, $dep);
+                }
+            }
+
+            #~ my @deps = (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}});
+            if ($self->more_than_one_ref($proj, \@deps, $count_ref))
+            {
+                return 1;
+            }
+        }
+        else
+        {
+            DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$x->{name}]);
+            return 0;
+        }
+    }
+
+    return 0;
 }
 
 sub expand_working_project
@@ -3357,8 +3418,10 @@ sub remove_module_from_runtime
             {
                 if (!defined($x->{dep}))
                 {
-                    @{$self->{this_product}->{runtime}->{runtime_products_compliant}} = grep { $_->{name} ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_compliant}};
-                    @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}} = grep { $_->{name} ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}};
+                    @{$self->{this_product}->{runtime}->{runtime_products_compliant}} = grep { "$_->{name}-$_->{version}-$_->{flavour}" ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_compliant}};
+                    @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}} = grep { "$_->{name}-$_->{version}-$_->{flavour}" ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}};
+                    #~ @{$self->{this_product}->{runtime}->{runtime_products_compliant}} = grep { $_->{name} ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_compliant}};
+                    #~ @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}} = grep { $_->{name} ne $x->{parent} } @{$self->{this_product}->{runtime}->{runtime_products_non_compliant}};
                 }
                 else
                 {
@@ -3874,8 +3937,8 @@ sub drag_copy
             if (DPOProductConfig::get_product_with_name($product_name, \$product))
             {
                 my $item_text = $self->{tree_ctrl_external_modules}->GetItemText($item);
-                if ($parent_item != $item
-                    || !$product->{dpo_compliant_product}->{value})
+                if ($parent_item != $item)
+                    #~ || !$product->{dpo_compliant_product}->{value})
                 {
                     if (!defined($to_copy{$product->{name}}))
                     {
@@ -4352,8 +4415,8 @@ sub drag_copy
                 {
                     # Make project with mpb
                     my $dpo_compliant = DPOCompliant->new(0,
-                                                        $mpb->{product_name},
-                                                        $mpb->{product_flavour},
+                                                        $product->{name},
+                                                        $product->{flavour},
                                                         $mpb->{name},
                                                         $mpb->{mpc_includes});
 
@@ -4558,9 +4621,7 @@ sub select_mpbs_from_non_compliant_product
                     if ($token eq $mpb_name)
                     {
                         $found = 1;
-                        my $dpo_mpb = DPOMpb->new($product->{name},
-                                                    $product->{flavour},
-                                                    $non_compliant_lib->{lib_id},
+                        my $dpo_mpb = DPOMpb->new($non_compliant_lib->{lib_id},
                                                     $mpb_name,
                                                     $product->{mpc_includes});
                         push(@$mpbs_ref, $dpo_mpb);
@@ -4576,9 +4637,7 @@ sub select_mpbs_from_non_compliant_product
             {
                 if ($non_compliant_lib->{mpb_name} eq $mpb_name)
                 {
-                    my $dpo_mpb = DPOMpb->new($product->{name},
-                                                $product->{flavour},
-                                                $non_compliant_lib->{lib_id},
+                    my $dpo_mpb = DPOMpb->new($non_compliant_lib->{lib_id},
                                                 $mpb_name,
                                                 $product->{mpc_includes});
                     push(@$mpbs_ref, $dpo_mpb);
@@ -4777,6 +4836,9 @@ sub close_product
     $self->enable_workspace_actions(0);
 
     $self->{combo_box_product}->SetValue("");
+
+    $self->{tree_ctrl_external_modules}->DeleteAllItems();
+    $self->{loaded_projects} = [];
 }
 
 sub add_a_recall
@@ -4793,18 +4855,16 @@ sub add_non_compliant_dep
 {
     my ($self, $target_project, $product, $dep_name, $mpb_name) = @_;
 
-    my $mpb = DPOMpb->new($product->{name},
-                            $product->{flavour},
-                            $dep_name,
+    my $mpb = DPOMpb->new($dep_name,
                             $mpb_name,
                             $product->{mpc_includes});
 
     # Make project dependency with mpb
     my $dpo_compliant = DPOCompliant->new(0,
-                                        $mpb->{product_name},
-                                        $mpb->{product_flavour},
+                                        $product->{name},
+                                        $product->{flavour},
                                         $mpb->{name},
-                                        $mpb->{path});
+                                        $mpb->{mpc_includes});
 
     my $project = DPOProject->new($mpb->{lib_id}, $product->{version}, $product->{version}, 4, $dpo_compliant); # type 4: determined next
 
@@ -4969,26 +5029,32 @@ sub extract_projects_of_product_with_version
     my $path = "\$($env_var_id)";
     if (DPOEnvVars::expand_env_var(\$path))
     {
-        if (!DPOUtils::in_dpo_pool($path))
+        if (DPOUtils::in_dpo_pool($path))
         {
-            Wx::MessageBox("$product_name is not in pool.");
-            return 0;
-        }
+            my $versions_log = "$path/dpo_versions.log";
 
-        my $versions_log = "$path/dpo_versions.log";
-
-        my @blocks;
-        if (DPOUtils::get_versions_blocks($versions_log, \@blocks))
-        {
-            foreach my $block (@blocks)
+            my @blocks;
+            if (DPOUtils::get_versions_blocks($versions_log, \@blocks))
             {
-                if ($block->{version} eq $product_version)
+                foreach my $block (@blocks)
                 {
-                    foreach my $project (@{$block->{projects}})
+                    if ($block->{version} eq $product_version)
                     {
-                        if ($project->{status} ne 'X')
+                        foreach my $project (@{$block->{projects}})
                         {
-                            push(@$projects_ref, $project);
+                            if ($project->{status} ne 'X')
+                            {
+                                my $proj;
+                                if ($self->get_project($project->{project_name}, \$proj))
+                                {
+                                    push(@$projects_ref, $proj);
+                                }
+                                else
+                                {
+                                    DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$project->{project_name}]);
+                                    return 0;
+                                }
+                            }
                         }
                     }
                 }
@@ -4996,81 +5062,37 @@ sub extract_projects_of_product_with_version
         }
         else
         {
-            # TO_DO;
-            return 0;
+            my @projects_paths;
+            if (!DPOUtils::get_projects_paths("$path/projects", \@projects_paths))
+            {
+                # TO_DO
+                return 0;
+            }
+
+            foreach my $x (sort @projects_paths)
+            {
+                my ($project_name) = $x =~ /.*\/(.*)/;
+
+                print DPOUtils::now_text(), "Loading $project_name...\n";
+
+                my $project;
+                if ($self->get_project($project_name, \$project))
+                {
+                    push(@$projects_ref, $project);
+                }
+                else
+                {
+                    DPOLog::report_msg(DPOEvents::GET_PROJECT_FAILURE, [$project_name]);
+                    return 0;
+                }
+            }
         }
-
-        #~ my @lines;
-        #~ if (!DPOUtils::get_file_lines($versions_log, \@lines))
-        #~ {
-            #~ return 0;
-        #~ }
-
-        #~ my @projects;
-
-        #~ my $version = "";
-        #~ foreach my $line (@lines)
-        #~ {
-            #~ if ($line =~ /^$/) # empty line
-            #~ {
-                #~ next;
-            #~ }
-
-            #~ if ($line =~ /\[\d+\.\d+\.\d+]/)
-            #~ {
-                #~ if ($version eq ""
-                    #~ || $version ne $product_version)
-                #~ {
-                    #~ $version = $product_version;
-                #~ }
-                #~ next;
-            #~ }
-
-            #~ my ($status, $right) = $line =~ /^(.{1})\s*(.*)/;
-
-                #~ if ($status eq "A")
-                #~ {
-                    #~ if (!List::MoreUtils::any {$_ eq $runtime} @projects)
-                    #~ {
-                        #~ push(@runtimes_log, $runtime);
-                    #~ }
-                #~ }
-                #~ if ($status eq "X")
-                #~ {
-                    #~ @runtimes_log = grep { $_ ne $runtime } @runtimes_log;
-                #~ }
-            #~ }
-        #~ }
-
     }
     else
     {
         # TO_DO
         return 0;
     }
-
-
-    #~ my @last_block;
-    #~ foreach my $line (reverse @lines)
-    #~ {
-        #~ chomp $line;
-
-        #~ if ($line =~ /^$/) # not an empty line
-        #~ {
-            #~ next;
-        #~ }
-
-        #~ push(@last_block, $line);
-        #~ if ($line =~ /\[.*\]/)
-        #~ {
-            #~ last;
-        #~ }
-    #~ }
-
-    #~ foreach my $line (reverse @last_block)
-    #~ {
-        #~ push(@$projects_ref, $line);
-    #~ }
 
     return 1;
 }
@@ -5563,55 +5585,15 @@ sub on_tree_ctrl_external2_expanding
     {
         if ($product->{dpo_compliant_product}->{value})
         {
-            #~ my $sub_path = "projects";
-            #~ if (DPOUtils::in_dpo_pool($path))
-            #~ {
-                #~ $sub_path = "modules";
-            #~ }
-            #~ my @product_projects;
-            #~ my $other_project_name = "";
-            #~ if (!$self->extract_product_projects_ids("$path/$sub_path", $other_project_name, \@product_projects))
-            #~ {
-                #~ return;
-            #~ }
-            #~ else
-            #~ {
-                #~ foreach my $x (@product_projects)
-                #~ {
-                    #~ my ($project_name, $version) = $x =~ /(.*)-(.*)/;
-
-                    #~ my $new_item = $self->{tree_ctrl_external_modules}->AppendItem($item, "$project_name-$version");
-
-                    #~ my $plugin_exec_none;
-                    #~ if (DPOUtils::check_for_plugin_exec($project_name, \$plugin_exec_none))
-                    #~ {
-                        #~ if ($plugin_exec_none eq "plugin")
-                        #~ {
-                            #~ $self->{tree_ctrl_external_modules}->SetItemBackgroundColour($new_item, Wx::Colour->new(128, 255, 128));
-                        #~ }
-                        #~ else
-                        #~ {
-                            #~ if ($plugin_exec_none eq "executable")
-                            #~ {
-                                #~ $self->{tree_ctrl_external_modules}->SetItemBackgroundColour($new_item, Wx::Colour->new(128, 255, 255));
-                            #~ }
-                        #~ }
-                    #~ }
-                    #~ else
-                    #~ {
-                        #~ $self->{tree_ctrl_external_modules}->SetItemBackgroundColour($new_item, Wx::Colour->new(255, 0, 0));
-                    #~ }
-                #~ }
-            #~ }
             my @projects;
             if ($self->extract_projects_of_product_with_version($product_name, $product_version, \@projects))
             {
                 foreach my $project (@projects)
                 {
-                    my $new_item = $self->{tree_ctrl_external_modules}->AppendItem($item, "$project->{project_name}-$project->{version}");
+                    my $new_item = $self->{tree_ctrl_external_modules}->AppendItem($item, "$project->{name}-$project->{version}");
 
                     my $plugin_exec_none;
-                    if (DPOUtils::check_for_plugin_exec($project->{project_name}, \$plugin_exec_none))
+                    if (DPOUtils::check_for_plugin_exec($project->{name}, \$plugin_exec_none))
                     {
                         if ($plugin_exec_none eq "plugin")
                         {
@@ -6007,6 +5989,27 @@ sub on_button_versions
 {
     my ($self, $event) = @_;
 
+    my @projects_with_invalid_type;
+    foreach my $project (@{$self->{workspace_projects}})
+    {
+        if ($project->{type} == 4)
+        {
+            push(@projects_with_invalid_type, $project->{name});
+        }
+    }
+
+    if (scalar(@projects_with_invalid_type) != 0)
+    {
+        my $msg = "Invalid type for projects:\n\n";
+        foreach my $p (@projects_with_invalid_type)
+        {
+            $msg .= "   - $p\n";
+        }
+        $msg .= "\n\nYou must determine the type before changing versions.";
+        Wx::MessageBox("$msg", "", Wx::wxOK | Wx::wxICON_ERROR);
+        return;
+    }
+
     my $dlg = DPOProductWorkspaceProjectsVersionsDlg->new(
                     $self,
                     undef,
@@ -6047,6 +6050,7 @@ sub on_button_versions
                     else
                     {
                         DPOLog::report_msg(DPOEvents::UPDATE_WORKSPACE_PROJECTS_FAILURE, [$project->{name}]);
+                        return;
                     }
                 }
             }
@@ -6060,7 +6064,7 @@ sub on_button_versions
             $self->fill_tree_working();
         }
 
-        $self->validate();
+        $self->validate(0);
     }
 
     return;
@@ -6214,6 +6218,8 @@ sub on_button_expand_all
 sub on_button_highlight
 {
     my ($self, $event) = @_;
+
+    my $wait = Wx::BusyCursor->new();
 
     $self->highlight();
 

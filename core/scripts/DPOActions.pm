@@ -274,6 +274,26 @@ sub new
 1;
 
 
+package DPOWorkingProjectsWithUndefinedDepType;
+
+sub new
+{
+    my ($class, $project_name, $dep_name, $type) = @_;
+
+    my $self =
+    {
+        project_name => $project_name,
+        dep_name => $dep_name,
+        type => $type
+    };
+
+    bless($self, $class);
+    return $self;
+}
+
+1;
+
+
 package DPOActions;
 
 use constant {
@@ -560,6 +580,7 @@ sub validate_projects
     my @undetermined_project_type;
     my @non_existent_dependency_as_type;
     my @product_runtime_compliants;
+    my @working_projects_with_undefined_dep_type;
 
     my @validated;
 
@@ -580,7 +601,6 @@ sub validate_projects
                             $project,
                             \@undetermined_project_type);
 
-
         # Projects that are required to be validated deeply.
         $self->validate_project($project,
                                 $self->{panel_product}->{this_product}->{name}, # parent
@@ -596,6 +616,8 @@ sub validate_projects
                                 \@non_existent_dependency_as_type,
                                 \@validated);
     }
+
+    $self->working_projects_with_undefined_dep_type(\@working_projects_with_undefined_dep_type);
 
     $self->validate_product_runtime_compliants(\@product_runtime_compliants);
 
@@ -613,6 +635,7 @@ sub validate_projects
                             \@wrong_arch_project,
                             \@dependencies_configurations,
                             \@non_existent_dependency_as_type,
+                            \@working_projects_with_undefined_dep_type,
                             \@product_runtime_compliants);
 
     if ($ok)
@@ -757,6 +780,7 @@ sub report_validation
         $wrong_arch_project_ref,
         $dependencies_configurations_ref,
         $non_existent_dependency_as_type_ref,
+        $working_projects_with_undefined_dep_type_ref,
         $product_runtime_compliants_bad_version_ref) = @_;
 
     foreach my $x (@$same_actual_and_target_versions_ref)
@@ -903,6 +927,19 @@ sub report_validation
                                     (caller(0))[3]);
     }
 
+    # $non_existent_dependency_as_type_ref...
+
+    foreach my $x (@$working_projects_with_undefined_dep_type_ref)
+    {
+        $$ok_ref = 0;
+
+        DPOLog::report_msg(DPOEvents::PROJECT_WITH_UNDEFINED_DEP_TYPE,
+                                    [$x->{project_name},
+                                    $x->{dep_name},
+                                    $x->{type}],
+                                    (caller(0))[3]);
+    }
+
     foreach my $x (@$product_runtime_compliants_bad_version_ref)
     {
         $$ok_ref = 0;
@@ -913,8 +950,6 @@ sub report_validation
                                     $x->{proj_dep_version}],
                                     (caller(0))[3]);
     }
-
-    # $non_existent_dependency_as_type_ref...
 }
 
 sub non_workspace_project_defined_as_local
@@ -1365,6 +1400,25 @@ sub non_existent_dependency_as_type
     #~ {
         #~ # meme chose mais attention, on est en static icitte.
     #~ }
+}
+
+sub working_projects_with_undefined_dep_type
+{
+    my ($self, $working_projects_with_undefined_dep_type_ref) = @_;
+
+    foreach my $workspace_project (@{$self->{panel_product}->{workspace_projects}})
+    {
+        my %dep_types;
+        foreach my $dep (@{$workspace_project->relevant_deps()})
+        {
+            if ($dep->{type} == 7
+                || $dep->{type} == 4)
+            {
+                my $p = DPOWorkingProjectsWithUndefinedDepType->new($workspace_project->{name}, $dep->{name}, $dep->{type});
+                push(@$working_projects_with_undefined_dep_type_ref, $p);
+            }
+        }
+    }
 }
 
 sub set_env_vars
@@ -1833,7 +1887,7 @@ sub fetch_modules_from_compliant_project
         # If the project is in 'this_product', we have to fetch the module
         # of this project only (not those related to runtime dependencies of
         # 'this_product'). But, if product of the project is different of
-        # 'this_product', we have to fetch modules from runtime depedencies of
+        # 'this_product', we have to fetch modules from runtime dependencies of
         # the product.
         if ($project->{dpo_compliant}->{product_name} ne $self->{panel_product}->{this_product}->{name})
         {

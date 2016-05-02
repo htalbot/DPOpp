@@ -17,7 +17,7 @@
       <Name>xyz</Name>
       <Version>0.0.0</Version>
       <TargetVersion>0.0.0</TargetVersion>
-      <Type>6</Type>
+      <Type>4</Type>
       <DPOCompliant>
         <Value>1</Value>
         <ProductName />
@@ -32,7 +32,7 @@
       <Name>xyz</Name>
       <Version>0.0.0</Version>
       <TargetVersion>0.0.0</TargetVersion>
-      <Type>5</Type>
+      <Type>4</Type>
       <DPOCompliant>
         <Value>1</Value>
         <ProductName />

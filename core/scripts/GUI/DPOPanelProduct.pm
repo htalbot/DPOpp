@@ -171,7 +171,7 @@ sub new {
     $name   = ""                 unless defined $name;
 
     # begin wxGlade: DPOPanelProduct::new
-    $style = wxTAB_TRAVERSAL
+    $style = wxTAB_TRAVERSAL 
         unless defined $style;
 
     $self = $self->SUPER::new( $parent, $id, $pos, $size, $style, $name );
@@ -221,8 +221,10 @@ sub new {
     $self->{sizer_working_project_type_dynamic_staticbox} = Wx::StaticBox->new($self->{notebook_workspace_runtime_pane_workspace}, wxID_ANY, _T("Dynamic side") );
     $self->{tree_ctrl_working_project_static} = Wx::TreeCtrl->new($self->{notebook_workspace_runtime_pane_workspace}, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_MULTIPLE|wxTR_HIDE_ROOT|wxTR_MULTIPLE|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER);
     $self->{sizer_working_project_type_static_staticbox} = Wx::StaticBox->new($self->{notebook_workspace_runtime_pane_workspace}, wxID_ANY, _T("Static side") );
+    $self->{tree_ctrl_working_project_exe} = Wx::TreeCtrl->new($self->{notebook_workspace_runtime_pane_workspace}, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_HIDE_ROOT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER);
     $self->{button_working_project_expand} = Wx::Button->new($self->{notebook_workspace_runtime_pane_workspace}, wxID_ANY, _T("+"));
     $self->{button_layers} = Wx::Button->new($self->{notebook_workspace_runtime_pane_workspace}, wxID_ANY, _T("Layers..."));
+    $self->{sizer_working_project_dependencies_staticbox} = Wx::StaticBox->new($self->{notebook_workspace_runtime_pane_workspace}, wxID_ANY, _T("Depedencies") );
     $self->{sizer_working_project_staticbox} = Wx::StaticBox->new($self->{notebook_workspace_runtime_pane_workspace}, wxID_ANY, _T("Working project (*** no selection ***)") );
     $self->{notebook_workspace_runtime_pane_runtime} = Wx::Panel->new($self->{notebook_workspace_runtime}, wxID_ANY, wxDefaultPosition, wxDefaultSize, );
     $self->{notebook_runtime} = Wx::Notebook->new($self->{notebook_workspace_runtime_pane_runtime}, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
@@ -288,6 +290,7 @@ sub new {
     Wx::Event::EVT_CHECKBOX($self, $self->{checkbox_static}->GetId, \&on_checkbox_static);
     Wx::Event::EVT_TREE_KEY_DOWN($self, $self->{tree_ctrl_working_project_dynamic}->GetId, \&on_tree_working_project_dynamic_keydown);
     Wx::Event::EVT_TREE_KEY_DOWN($self, $self->{tree_ctrl_working_project_static}->GetId, \&on_tree_working_project_static_keydown);
+    Wx::Event::EVT_TREE_KEY_DOWN($self, $self->{tree_ctrl_working_project_exe}->GetId, \&on_tree_working_project_exe_keydown);
     Wx::Event::EVT_BUTTON($self, $self->{button_working_project_expand}->GetId, \&on_button_working_project_expand);
     Wx::Event::EVT_BUTTON($self, $self->{button_layers}->GetId, \&on_button_layers);
     Wx::Event::EVT_TREE_KEY_DOWN($self, $self->{tree_ctrl_runtime}->GetId, \&on_tree_runtime_keydown);
@@ -309,6 +312,7 @@ sub new {
 
     Wx::Event::EVT_TREE_ITEM_MENU($self, $self->{tree_ctrl_working_project_dynamic}->GetId, \&on_tree_ctrl_working_project_dynamic_menu);
     Wx::Event::EVT_TREE_ITEM_MENU($self, $self->{tree_ctrl_working_project_static}->GetId, \&on_tree_ctrl_working_project_static_menu);
+    Wx::Event::EVT_TREE_ITEM_MENU($self, $self->{tree_ctrl_working_project_exe}->GetId, \&on_tree_ctrl_working_project_exe_menu);
     Wx::Event::EVT_TREE_ITEM_MENU($self, $self->{tree_ctrl_workspace_projects}->GetId, \&on_tree_ctrl_workspace_projects_menu);
     Wx::Event::EVT_TREE_ITEM_MENU($self, $self->{tree_ctrl_runtime}->GetId, \&on_tree_ctrl_runtime_menu);
     Wx::Event::EVT_TREE_ITEM_MENU($self, $self->{tree_ctrl_runtime_in_workspace}->GetId, \&on_tree_ctrl_runtime_in_workspace_menu);
@@ -354,6 +358,8 @@ sub new {
     $self->{text_ctrl_external_modules_executable}->SetBackgroundColour(Wx::Colour->new(128, 255, 255));
     $self->{text_ctrl_external_modules_undeterminable}->SetBackgroundColour(Wx::Colour->new(255, 176, 98));
 
+    $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_exe}, 0);
+
     # Activate drag & drop
     $self->SetDropTarget(DPOPanelProductDropTarget->new($self));
 
@@ -397,8 +403,9 @@ sub __set_properties {
     $self->{text_ctrl_working_project_current_version}->SetMinSize(Wx::Size->new(80, -1));
     $self->{text_ctrl_working_project_target_version}->SetMinSize(Wx::Size->new(80, -1));
     $self->{text_ctrl_working_project_target_version}->SetBackgroundColour(Wx::Colour->new(255, 255, 0));
-    $self->{tree_ctrl_working_project_dynamic}->SetMinSize(Wx::Size->new(200, -1));
-    $self->{tree_ctrl_working_project_static}->SetMinSize(Wx::Size->new(200, -1));
+    $self->{tree_ctrl_working_project_dynamic}->SetMinSize(Wx::Size->new(50, -1));
+    $self->{tree_ctrl_working_project_static}->SetMinSize(Wx::Size->new(50, -1));
+    $self->{tree_ctrl_working_project_exe}->SetMinSize(Wx::Size->new(50, -1));
     $self->{button_working_project_expand}->SetMinSize(Wx::Size->new(20, 20));
     $self->{button_layers}->SetMinSize(Wx::Size->new(60, 20));
     $self->{tree_ctrl_runtime}->SetMinSize(Wx::Size->new(138, -1));
@@ -454,9 +461,11 @@ sub __do_layout {
     $self->{sizer_18} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_working_project_staticbox}->Lower();
     $self->{sizer_working_project} = Wx::StaticBoxSizer->new($self->{sizer_working_project_staticbox}, wxVERTICAL);
-    $self->{sizer_working_project_dependencies} = Wx::BoxSizer->new(wxVERTICAL);
+    $self->{sizer_working_project_dependencies_staticbox}->Lower();
+    $self->{sizer_working_project_dependencies} = Wx::StaticBoxSizer->new($self->{sizer_working_project_dependencies_staticbox}, wxVERTICAL);
     $self->{sizer_44} = Wx::BoxSizer->new(wxHORIZONTAL);
     $self->{sizer_working_project_types} = Wx::BoxSizer->new(wxHORIZONTAL);
+    $self->{sizer_working_project_type_exe} = Wx::BoxSizer->new(wxVERTICAL);
     $self->{sizer_working_project_type_static_staticbox}->Lower();
     $self->{sizer_working_project_type_static} = Wx::StaticBoxSizer->new($self->{sizer_working_project_type_static_staticbox}, wxVERTICAL);
     $self->{sizer_working_project_type_dynamic_staticbox}->Lower();
@@ -549,6 +558,8 @@ sub __do_layout {
     $self->{sizer_working_project_types}->Add($self->{sizer_working_project_type_dynamic}, 1, wxEXPAND, 0);
     $self->{sizer_working_project_type_static}->Add($self->{tree_ctrl_working_project_static}, 1, wxEXPAND, 0);
     $self->{sizer_working_project_types}->Add($self->{sizer_working_project_type_static}, 1, wxEXPAND, 0);
+    $self->{sizer_working_project_type_exe}->Add($self->{tree_ctrl_working_project_exe}, 1, wxEXPAND, 0);
+    $self->{sizer_working_project_types}->Add($self->{sizer_working_project_type_exe}, 1, wxEXPAND, 0);
     $self->{sizer_working_project_dependencies}->Add($self->{sizer_working_project_types}, 1, wxEXPAND, 0);
     $self->{sizer_44}->Add($self->{button_working_project_expand}, 0, 0, 0);
     $self->{sizer_44}->Add($self->{button_layers}, 0, wxLEFT, 3);
@@ -996,6 +1007,8 @@ sub open_product
 
     # Opening a product can be time consuming...
     my $wait = Wx::BusyCursor->new();
+
+    $self->{loaded_projects} = [];
 
     my $env_var_id = uc($product_name) . "_ROOT";
     my $product_path = "\$($env_var_id)";
@@ -1962,32 +1975,33 @@ sub fill_tree_dependencies
     my @non_compliant_dep;
     foreach my $dependency (sort {$a->{name} cmp $b->{name}} @array)
     {
-        my $proj;
-        $self->get_project($dependency->{name}, \$proj);
-
         my $add = 1;
 
         my $type_text = "";
 
-        if ($proj->{type} == 4)
+        if ($dependency->{type} == 4)
         {
             $type_text = " (???)";
         }
-        if ($proj->{type} == 5)
+        if ($dependency->{type} == 5)
         {
             $type_text = " (static)";
         }
-        if ($proj->{type} == 6)
+        if ($dependency->{type} == 6)
         {
             $type_text = " (dynamic)";
         }
-        if ($proj->{type} == 7)
+        if ($dependency->{type} == 7)
         {
             $type_text = " (static/dynamic)";
         }
 
         if ($add)
         {
+            # Cast dependency to project
+            my $proj;
+            $self->get_project($dependency->{name}, \$proj);
+
             my $item = $tree_ctrl->AppendItem($item_parent, "$proj->{name}-$proj->{target_version}$type_text");
             $self->fill_tree_dependencies($tree_ctrl, $item, $proj);
         }
@@ -2302,13 +2316,13 @@ sub fill_non_product_projects
 
 sub validate
 {
-    my ($self) = @_;
+    my ($self, $clear_msg) = @_;
 
     my $actions = DPOActions->new(
                         DPOActions::ACTION_VALIDATE,
                         $self);
 
-    my $rc = $actions->go();
+    my $rc = $actions->go($clear_msg);
 
     return $rc;
 }
@@ -2335,8 +2349,8 @@ sub save_project
                         $project->{name},
                         \$path))
         {
-            DPOLog::report_msg(DPOEvents::GET_PATH_FAILURE, [$project->{name}, "$self->{this_product}->{path}/projects"]);
-            return 0;
+            # Not a project of the product. Must not save (the project itself must be revisited).
+            return 1;
         }
     }
 
@@ -2469,6 +2483,8 @@ sub load_working_project
         $self->{text_ctrl_working_project_target_version}->ChangeValue($self->{working_project}->{target_version});
         if ($self->{working_project}->is_library())
         {
+            $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_exe}, 0);
+
             $self->{sizer_type_staticbox}->Show(1);
             $self->{checkbox_dynamic}->Enable(1);
             $self->{checkbox_static}->Enable(1);
@@ -2508,6 +2524,9 @@ sub load_working_project
                     $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_static}, 0);
                 }
             }
+
+            $self->{tree_ctrl_working_project_dynamic}->Enable(1);
+            $self->{tree_ctrl_working_project_static}->Enable(1);
         }
         else
         {
@@ -2515,11 +2534,10 @@ sub load_working_project
             $self->{sizer_type_staticbox}->Show(0);
             $self->{checkbox_dynamic}->Show(0);
             $self->{checkbox_static}->Show(0);
+            $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_dynamic}, 0);
             $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_static}, 0);
+            $self->{sizer_working_project_types}->Show($self->{sizer_working_project_type_exe}, 1);
         }
-
-        $self->{tree_ctrl_working_project_dynamic}->Enable(1);
-        $self->{tree_ctrl_working_project_static}->Enable(1);
 
         $self->fill_tree_working();
 
@@ -2546,22 +2564,23 @@ sub fill_tree_working
         $self->fill_tree_working_ext(
                     $self->{working_project},
                     $self->{tree_ctrl_working_project_dynamic},
-                    $self->{tree_ctrl_working_project_static})
+                    $self->{tree_ctrl_working_project_static},
+                    $self->{tree_ctrl_working_project_exe})
     }
 }
 
 sub fill_tree_working_ext
 {
-    my ($self, $project, $tree_dynamic, $tree_static) = @_;
+    my ($self, $project, $tree_dynamic, $tree_static, $tree_exe) = @_;
 
     if ($project->is_executable())
     {
-        $self->fill_tree_working_spec($tree_dynamic, $project, "dynamic");
-        $self->fill_tree_working_spec($tree_static, $project, "static");
+        $self->fill_tree_working_spec($tree_exe, $project, "exe");
     }
     else
     {
         if ($tree_dynamic != $self->{tree_ctrl_working_project_dynamic}
+            || $self->{checkbox_dynamic}->GetValue() == 0
             || $self->{checkbox_dynamic}->GetValue() == 1
             || $self->{working_project}->is_header_impl_or_abstract_class())
         {
@@ -2582,7 +2601,8 @@ sub fill_tree_working_spec
     my ($self, $tree_ctrl, $project, $type) = @_;
 
     my $dependencies;
-    if ($type eq "dynamic")
+    if ($type eq "dynamic"
+        || $type eq "exe")
     {
         $dependencies = $project->{dependencies_when_dynamic};
     }
@@ -2597,33 +2617,29 @@ sub fill_tree_working_spec
 
     foreach my $dep (sort {$a->{name} cmp $b->{name}} @{$dependencies})
     {
-        my $proj;
-        $self->get_project($dep->{name}, \$proj);
-
-        $proj->{type} = $dep->{type};
-
         my $type_text="";
-        if ($proj->is_executable())
+        if ($dep->{type} == 0
+            || $dep->{type} == 1)
         {
             $type_text = " (excutable)";
         }
-        if ($proj->{type} == 4)
+        if ($dep->{type} == 4)
         {
             $type_text = " (???)";
         }
-        if ($proj->{type} == 5)
+        if ($dep->{type} == 5)
         {
             $type_text = " (static)";
         }
-        if ($proj->{type} == 6)
+        if ($dep->{type} == 6)
         {
             $type_text = " (dynamic)";
         }
-        if ($proj->{type} == 7)
+        if ($dep->{type} == 7)
         {
-            $type_text = " (??? dynamic/static ???)";
+            $type_text = " (dynamic/static)";
         }
-        if ($proj->{type} == 8)
+        if ($dep->{type} == 8)
         {
             if ($type eq "dynamic")
             {
@@ -2635,22 +2651,24 @@ sub fill_tree_working_spec
             }
         }
 
-        my $item = $tree_ctrl->AppendItem($root, "$proj->{name}-$proj->{target_version}$type_text");
-        if ($proj->is_executable())
+        # Cast dependency to project
+        my $item = $tree_ctrl->AppendItem($root, "$dep->{name}-$dep->{target_version}$type_text");
+        if ($dep->{type} == 0
+            || $dep->{type} == 1)
         {
             $tree_ctrl->SetItemBackgroundColour($item, $col_executable_dep);
             $tree_ctrl->SetItemTextColour($item, $col_black);
         }
-        if ($proj->{type} == 4)
+        if ($dep->{type} == 0
+            || $dep->{type} == 1)
         {
             $tree_ctrl->SetItemBackgroundColour($item, $col_red);
             $tree_ctrl->SetItemTextColour($item, $col_white);
         }
-        if ($proj->{type} == 7)
-        {
-            $tree_ctrl->SetItemBackgroundColour($item, $col_red);
-            $tree_ctrl->SetItemTextColour($item, $col_white);
-        }
+
+        # Cast dependency to project
+        my $proj;
+        $self->get_project($dep->{name}, \$proj);
         $self->fill_tree_working_dependencies($tree_ctrl, $item, $proj, $type);
     }
 
@@ -2671,7 +2689,8 @@ sub fill_tree_working_dependencies
 
     #~ my $array = $project->relevant_deps();
     my $array;
-    if ($type eq "dynamic")
+    if ($type eq "dynamic"
+        || $type eq "exe")
     {
         $array = $project->{dependencies_when_dynamic};
     }
@@ -3100,8 +3119,16 @@ sub prepare_actions_on_working_project_tree
     }
     else
     {
-        $tree_ctrl = $self->{tree_ctrl_working_project_static};
-        $deps = $self->{working_project}->{dependencies_when_static};
+        if ($type eq "static")
+        {
+            $tree_ctrl = $self->{tree_ctrl_working_project_static};
+            $deps = $self->{working_project}->{dependencies_when_static};
+        }
+        else
+        {
+            $tree_ctrl = $self->{tree_ctrl_working_project_exe};
+            $deps = $self->{working_project}->{dependencies_when_dynamic};
+        }
     }
 
     my $root_item = $tree_ctrl->GetRootItem();
@@ -5929,6 +5956,23 @@ sub on_tree_working_project_static_keydown
 }
 
 
+sub on_tree_working_project_exe_keydown
+{
+    my ($self, $event) = @_;
+
+    $self->tree_working_project_dynamic_keydown($event, "exe", $self->{tree_ctrl_working_project_exe});
+
+    $self->validate();
+
+    return;
+
+    # wxGlade: DPOPanelProduct::on_tree_working_project_exe_keydown <event_handler>
+    warn "Event handler (on_tree_working_project_exe_keydown) not implemented";
+    $event->Skip;
+    # end wxGlade
+}
+
+
 sub on_button_working_project_expand
 {
     my ($self, $event) = @_;
@@ -5981,6 +6025,27 @@ sub on_button_versions
 {
     my ($self, $event) = @_;
 
+    my @projects_with_invalid_type;
+    foreach my $project (@{$self->{workspace_projects}})
+    {
+        if ($project->{type} == 4)
+        {
+            push(@projects_with_invalid_type, $project->{name});
+        }
+    }
+
+    if (scalar(@projects_with_invalid_type) != 0)
+    {
+        my $msg = "Invalid type for projects:\n\n";
+        foreach my $p (@projects_with_invalid_type)
+        {
+            $msg .= "   - $p\n";
+        }
+        $msg .= "\n\nYou must determine the type before changing versions.";
+        Wx::MessageBox("$msg", "", Wx::wxOK | Wx::wxICON_ERROR);
+        return;
+    }
+
     my $dlg = DPOProductWorkspaceProjectsVersionsDlg->new(
                     $self,
                     undef,
@@ -6021,6 +6086,7 @@ sub on_button_versions
                     else
                     {
                         DPOLog::report_msg(DPOEvents::UPDATE_WORKSPACE_PROJECTS_FAILURE, [$project->{name}]);
+                        return;
                     }
                 }
             }
@@ -6034,7 +6100,7 @@ sub on_button_versions
             $self->fill_tree_working();
         }
 
-        $self->validate();
+        $self->validate(0);
     }
 
     return;
@@ -6188,6 +6254,8 @@ sub on_button_expand_all
 sub on_button_highlight
 {
     my ($self, $event) = @_;
+
+    my $wait = Wx::BusyCursor->new();
 
     $self->highlight();
 
@@ -6456,6 +6524,18 @@ sub on_tree_ctrl_working_project_static_menu
     if ($self->{working_project} != 0)
     {
         $self->prepare_actions_on_working_project_tree("static", $event, 1);
+
+        $self->validate();
+    }
+}
+
+sub on_tree_ctrl_working_project_exe_menu
+{
+    my ($self, $event) = @_;
+
+    if ($self->{working_project} != 0)
+    {
+        $self->prepare_actions_on_working_project_tree("exe", $event, 1);
 
         $self->validate();
     }
@@ -6927,6 +7007,7 @@ sub on_button_local_env_var
     $event->Skip;
     # end wxGlade
 }
+
 
 # end of class DPOPanelProduct
 

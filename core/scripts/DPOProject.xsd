@@ -96,8 +96,10 @@
             <xs:enumeration value='0'/> <!-- executable -->
             <xs:enumeration value='1'/> <!-- executable along a dpo compliant library (automatically created when a library is created) -->
             <xs:enumeration value='2'/> <!-- implementation header file  -->
+            <xs:enumeration value='4'/> <!-- pending -->
             <xs:enumeration value='5'/> <!-- static library -->
             <xs:enumeration value='6'/> <!-- dynamic library -->
+            <xs:enumeration value='7'/> <!-- both  -->
             <!--
                 bitset: xyz, where
                 x:  0 => executable (generate project for
