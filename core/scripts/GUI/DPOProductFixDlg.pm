@@ -156,7 +156,8 @@ sub read_version
                 {
                     $self->{text_ctrl_project_version}->SetValue("$major.$minor.$patch");
                     $self->{button_change}->Enable(1);
-                    $self->{button_change}->SetFocus();
+                    #~ $self->{button_change}->SetFocus();
+                    $self->{text_ctrl_project_name}->SetFocus();
                     $self->{text_ctrl_msg}->SetValue("");
                 }
                 else

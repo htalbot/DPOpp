@@ -81,12 +81,12 @@ sub post_import_
         # Saving environment variables
         my @listEnvVarValues;
 
-        my $env_var_id_client = "TEST_" . uc($self->{project}->{name}) . "_CLIENT_ROOT";
+        my $env_var_id_client = "TEST_" . uc($self->{project}->{name}) . "_CLIENT_PRJ_ROOT";
         my $path = "$self->{project_path}/test_" . $self->{project}->{name} . "_client";
         my $env_var_client = DPOEnvVar->new($env_var_id_client, $path);
         push(@listEnvVarValues, $env_var_client);
 
-        my $env_var_id_server = "TEST_" . uc($self->{project}->{name}) . "_SERVER_ROOT";
+        my $env_var_id_server = "TEST_" . uc($self->{project}->{name}) . "_SERVER_PRJ_ROOT";
         $path = "$self->{project_path}/test_" . $self->{project}->{name} . "_server";
         my $env_var_server = DPOEnvVar->new($env_var_id_server, $path);
         push(@listEnvVarValues, $env_var_server);
@@ -160,32 +160,32 @@ sub post_import_
         }
 
         # Add additional dependencies
-        if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{workspace_project}, $ace_product, "TAO_IORTable", "iortable"))
+        if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{working_project}, $ace_product, "TAO_IORTable", "iortable"))
         {
             DPOLog::report_msg(DPOEvents::CANT_ADD_NON_COMPLIANT_DEP, ["ACE", "TAO_IORTable"]);
             return 0;
         }
 
-        if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{workspace_project}, $ace_product, "TAO_Messaging", "messaging"))
+        if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{working_project}, $ace_product, "TAO_Messaging", "messaging"))
         {
             DPOLog::report_msg(DPOEvents::CANT_ADD_NON_COMPLIANT_DEP, ["ACE", "TAO_Messaging"]);
             return 0;
         }
 
-        if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{workspace_project}, $ace_product, "TAO_CosNaming", "naming"))
+        if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{working_project}, $ace_product, "TAO_CosNaming", "naming"))
         {
             DPOLog::report_msg(DPOEvents::CANT_ADD_NON_COMPLIANT_DEP, ["ACE", "TAO_CosNaming"]);
             return 0;
         }
 
-        if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{workspace_project}, $ace_product, "TAO_Utils", "utils"))
+        if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{working_project}, $ace_product, "TAO_Utils", "utils"))
         {
             DPOLog::report_msg(DPOEvents::CANT_ADD_NON_COMPLIANT_DEP, ["ACE", "TAO_Utils"]);
             return 0;
         }
 
         # Save workspace
-        if (!$self->{panel_product}->save_workspace($self->{panel_product}->{workspace_projects}))
+        if (!$self->{panel_product}->save_workspace($self->{panel_product}->{working_projects}))
         {
             DPOLog::report_msg(DPOEvents::GENERIC_ERROR, ["Can't save workspace"]);
             return 0;

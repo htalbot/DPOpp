@@ -26,6 +26,7 @@ sub new
 
     my $self = $class->SUPER::new($layer_path, $project_path, $project, $panel_product);
 
+    $self->{interface_project_name} = "";
     $self->{interface_name} = "";
     $self->{object_host_name} = "";
     $self->{object_file_name} = "";
@@ -75,13 +76,14 @@ sub set_corba_parameters
     {
         if ($dlg->ShowModal() == Wx::wxID_OK)
         {
-            $self->{interface_name} = $dlg->{combo_box_interfaces}->GetValue();
+            my $interface = $dlg->{combo_box_interfaces}->GetValue();
             $self->{object_host_name} = $dlg->{text_ctrl_host_file}->GetValue();
             $self->{object_file_name} = $dlg->{text_ctrl_object_file}->GetValue();
 
-            $self->{panel_product}->add_a_recall("Don't forget to include '$self->{interface_name}' into '$self->{project}->{name}'.");
+            ($self->{interface_project_name}) = $interface =~ /(.*):.*/;
+            $self->{panel_product}->add_a_recall("Don't forget to include '$self->{interface_project_name}' into '$self->{project}->{name}'.");
 
-            ($self->{interface_name}) = $self->{interface_name} =~ /.*:(.*)/;
+            ($self->{interface_name}) = $interface =~ /.*:(.*)/;
             $self->update_names(
                         $dlg->{target},
                         $self->{interface_name},

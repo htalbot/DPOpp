@@ -118,6 +118,8 @@ sub import_
         return 0;
     }
 
+    $self->{panel_product}->load_projects_in_product($self->{panel_product}->{this_product}->{path});
+
     return 1;
 }
 

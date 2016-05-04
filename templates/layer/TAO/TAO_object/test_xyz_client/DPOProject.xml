@@ -26,58 +26,6 @@
         <MPCIncludes></MPCIncludes>
       </DPOCompliant>
     </ProjectDependency>
-    <ProjectDependency>
-      <Name>TAO_CosNaming</Name>
-      <Version>0.0.0</Version>
-      <TargetVersion>0.0.0</TargetVersion>
-      <Type>6</Type>
-      <DPOCompliant>
-        <Value>0</Value>
-        <ProductName>ACE</ProductName>
-        <ProductFlavour>vanilla</ProductFlavour>
-        <MPB>naming</MPB>
-        <MPCIncludes>$(TAO_ROOT)/MPC/config</MPCIncludes>
-      </DPOCompliant>
-    </ProjectDependency>
-    <ProjectDependency>
-      <Name>TAO_IORTable</Name>
-      <Version>0.0.0</Version>
-      <TargetVersion>0.0.0</TargetVersion>
-      <Type>6</Type>
-      <DPOCompliant>
-        <Value>0</Value>
-        <ProductName>ACE</ProductName>
-        <ProductFlavour>vanilla</ProductFlavour>
-        <MPB>iortable</MPB>
-        <MPCIncludes>$(TAO_ROOT)/MPC/config</MPCIncludes>
-      </DPOCompliant>
-    </ProjectDependency>
-    <ProjectDependency>
-      <Name>TAO_Messaging</Name>
-      <Version>0.0.0</Version>
-      <TargetVersion>0.0.0</TargetVersion>
-      <Type>6</Type>
-      <DPOCompliant>
-        <Value>0</Value>
-        <ProductName>ACE</ProductName>
-        <ProductFlavour>vanilla</ProductFlavour>
-        <MPB>messaging</MPB>
-        <MPCIncludes>$(TAO_ROOT)/MPC/config</MPCIncludes>
-      </DPOCompliant>
-    </ProjectDependency>
-    <ProjectDependency>
-      <Name>TAO_Utils</Name>
-      <Version>0.0.0</Version>
-      <TargetVersion>0.0.0</TargetVersion>
-      <Type>6</Type>
-      <DPOCompliant>
-        <Value>0</Value>
-        <ProductName>ACE</ProductName>
-        <ProductFlavour>vanilla</ProductFlavour>
-        <MPB>utils</MPB>
-        <MPCIncludes>$(TAO_ROOT)/MPC/config</MPCIncludes>
-      </DPOCompliant>
-    </ProjectDependency>
   </Dependencies_when_dynamic>
   <Dependencies_when_static>
     <ProjectDependency>
@@ -91,58 +39,6 @@
         <ProductFlavour>vanilla</ProductFlavour>
         <MPB />
         <MPCIncludes />
-      </DPOCompliant>
-    </ProjectDependency>
-    <ProjectDependency>
-      <Name>TAO_CosNaming</Name>
-      <Version>0.0.0</Version>
-      <TargetVersion>0.0.0</TargetVersion>
-      <Type>5</Type>
-      <DPOCompliant>
-        <Value>0</Value>
-        <ProductName>ACE</ProductName>
-        <ProductFlavour>vanilla</ProductFlavour>
-        <MPB>naming</MPB>
-        <MPCIncludes>$(TAO_ROOT)/MPC/config</MPCIncludes>
-      </DPOCompliant>
-    </ProjectDependency>
-    <ProjectDependency>
-      <Name>TAO_IORTable</Name>
-      <Version>0.0.0</Version>
-      <TargetVersion>0.0.0</TargetVersion>
-      <Type>5</Type>
-      <DPOCompliant>
-        <Value>0</Value>
-        <ProductName>ACE</ProductName>
-        <ProductFlavour>vanilla</ProductFlavour>
-        <MPB>iortable</MPB>
-        <MPCIncludes>$(TAO_ROOT)/MPC/config</MPCIncludes>
-      </DPOCompliant>
-    </ProjectDependency>
-    <ProjectDependency>
-      <Name>TAO_Messaging</Name>
-      <Version>0.0.0</Version>
-      <TargetVersion>0.0.0</TargetVersion>
-      <Type>5</Type>
-      <DPOCompliant>
-        <Value>0</Value>
-        <ProductName>ACE</ProductName>
-        <ProductFlavour>vanilla</ProductFlavour>
-        <MPB>messaging</MPB>
-        <MPCIncludes>$(TAO_ROOT)/MPC/config</MPCIncludes>
-      </DPOCompliant>
-    </ProjectDependency>
-    <ProjectDependency>
-      <Name>TAO_Utils</Name>
-      <Version>0.0.0</Version>
-      <TargetVersion>0.0.0</TargetVersion>
-      <Type>5</Type>
-      <DPOCompliant>
-        <Value>0</Value>
-        <ProductName>ACE</ProductName>
-        <ProductFlavour>vanilla</ProductFlavour>
-        <MPB>utils</MPB>
-        <MPCIncludes>$(TAO_ROOT)/MPC/config</MPCIncludes>
       </DPOCompliant>
     </ProjectDependency>
   </Dependencies_when_static>

@@ -79,25 +79,25 @@ sub post_import_
         return 0;
     }
 
-    if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{workspace_project}, $ace_product, "TAO_IORTable", "iortable"))
+    if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{working_project}, $ace_product, "TAO_IORTable", "iortable"))
     {
         DPOLog::report_msg(DPOEvents::CANT_ADD_NON_COMPLIANT_DEP, ["ACE", "TAO_IORTable"]);
         return 0;
     }
 
-    if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{workspace_project}, $ace_product, "TAO_Messaging", "messaging"))
+    if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{working_project}, $ace_product, "TAO_Messaging", "messaging"))
     {
         DPOLog::report_msg(DPOEvents::CANT_ADD_NON_COMPLIANT_DEP, ["ACE", "TAO_Messaging"]);
         return 0;
     }
 
-    if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{workspace_project}, $ace_product, "TAO_CosNaming", "naming"))
+    if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{working_project}, $ace_product, "TAO_CosNaming", "naming"))
     {
         DPOLog::report_msg(DPOEvents::CANT_ADD_NON_COMPLIANT_DEP, ["ACE", "TAO_CosNaming"]);
         return 0;
     }
 
-    if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{workspace_project}, $ace_product, "TAO_Utils", "utils"))
+    if (!$self->{panel_product}->add_non_compliant_dep($self->{panel_product}->{working_project}, $ace_product, "TAO_Utils", "utils"))
     {
         DPOLog::report_msg(DPOEvents::CANT_ADD_NON_COMPLIANT_DEP, ["ACE", "TAO_Utils"]);
         return 0;
