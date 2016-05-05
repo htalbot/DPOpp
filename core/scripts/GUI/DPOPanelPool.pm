@@ -151,7 +151,7 @@ sub new {
     $name   = ""                 unless defined $name;
 
     # begin wxGlade: DPOPanelPool::new
-    $style = wxTAB_TRAVERSAL
+    $style = wxTAB_TRAVERSAL 
         unless defined $style;
 
     $self = $self->SUPER::new( $parent, $id, $pos, $size, $style, $name );
@@ -175,9 +175,9 @@ sub new {
     $self->{button_activation_select_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Select all"));
     $self->{button_activation_deselect_all} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Deselect all"));
     $self->{button_activation_remove_from_list} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Remove from list"));
-    $self->{button_activate_last_versions} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate last versions"));
     $self->{button_activate} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate selection"));
     $self->{button_deactivate} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Deactivate selection"));
+    $self->{button_activate_last_versions} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate last versions"));
     $self->{sizer_product_activation_working_trees_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activation of any products") );
     $self->{sizer_product_activation_staticbox} = Wx::StaticBox->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Product activation from DPO pool (defined by DPO_POOL_ROOT) ") );
     $self->{button_activate_project} = Wx::Button->new($self->{notebook_pool_operations_activation}, wxID_ANY, _T("Activate a project..."));
@@ -258,9 +258,9 @@ sub new {
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_select_all}->GetId, \&on_button_activation_select_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_deselect_all}->GetId, \&on_button_activation_deselect_all);
     Wx::Event::EVT_BUTTON($self, $self->{button_activation_remove_from_list}->GetId, \&on_button_activation_remove_from_list);
-    Wx::Event::EVT_BUTTON($self, $self->{button_activate_last_versions}->GetId, \&on_button_activate_last_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate}->GetId, \&on_button_activate);
     Wx::Event::EVT_BUTTON($self, $self->{button_deactivate}->GetId, \&on_button_deactivate);
+    Wx::Event::EVT_BUTTON($self, $self->{button_activate_last_versions}->GetId, \&on_button_activate_last_versions);
     Wx::Event::EVT_BUTTON($self, $self->{button_activate_project}->GetId, \&on_button_activate_project);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_packaging_products}->GetId, \&on_combo_box_packaging_products);
     Wx::Event::EVT_COMBOBOX($self, $self->{combo_box_packaging_product_versions}->GetId, \&on_combo_box_packaging_product_versions);
@@ -461,12 +461,12 @@ sub __do_layout {
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_159}, 1, wxEXPAND, 0);
     $self->{sizer_144}->Add($self->{list_ctrl_product}, 1, wxEXPAND, 0);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_144}, 1, wxEXPAND, 0);
-    $self->{sizer_product_activation_actions}->Add($self->{button_activation_select_all}, 0, wxALIGN_CENTER_HORIZONTAL, 0);
-    $self->{sizer_product_activation_actions}->Add($self->{button_activation_deselect_all}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
-    $self->{sizer_product_activation_actions}->Add($self->{button_activation_remove_from_list}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
-    $self->{sizer_product_activation_actions}->Add($self->{button_activate_last_versions}, 0, wxTOP, 5);
-    $self->{sizer_product_activation_actions}->Add($self->{button_activate}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 10);
-    $self->{sizer_product_activation_actions}->Add($self->{button_deactivate}, 0, wxTOP|wxALIGN_CENTER_HORIZONTAL, 5);
+    $self->{sizer_product_activation_actions}->Add($self->{button_activation_select_all}, 0, wxEXPAND, 0);
+    $self->{sizer_product_activation_actions}->Add($self->{button_activation_deselect_all}, 0, wxTOP|wxEXPAND, 5);
+    $self->{sizer_product_activation_actions}->Add($self->{button_activation_remove_from_list}, 0, wxTOP|wxEXPAND, 5);
+    $self->{sizer_product_activation_actions}->Add($self->{button_activate}, 0, wxTOP|wxEXPAND, 10);
+    $self->{sizer_product_activation_actions}->Add($self->{button_deactivate}, 0, wxTOP|wxEXPAND, 5);
+    $self->{sizer_product_activation_actions}->Add($self->{button_activate_last_versions}, 0, wxTOP|wxEXPAND, 10);
     $self->{sizer_product_activation_working_trees}->Add($self->{sizer_product_activation_actions}, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     $self->{sizer_product_activation}->Add($self->{sizer_product_activation_working_trees}, 1, wxALL|wxEXPAND, 5);
     $self->{sizer_activation}->Add($self->{sizer_product_activation}, 1, wxALL|wxEXPAND, 10);
@@ -2703,7 +2703,116 @@ sub on_button_deactivate
 {
     my ($self, $event) = @_;
 
-    Wx::MessageBox("Not implemented yet");
+    my @products_to_deactivate;
+    my $i = -1;
+    for ( ;; )
+    {
+        $i = $self->{list_ctrl_product}->GetNextItem($i,
+                                    Wx::wxLIST_NEXT_ALL,
+                                    Wx::wxLIST_STATE_SELECTED);
+        if ( $i == -1 )
+        {
+            last;
+        }
+
+        my $item_name = $self->{list_ctrl_product}->GetItem($i, 0);
+        my $product_name = $item_name->GetText();
+
+        if ($product_name eq "ACE")
+        {
+            my $ace_path =  "\$(ACE_ROOT)";
+            if (DPOEnvVars::expand_env_var(\$ace_path))
+            {
+                my $mpc_path =  "\$(MPC_ROOT)";
+                if (DPOEnvVars::expand_env_var(\$mpc_path))
+                {
+                    if ($mpc_path =~ /$ace_path/)
+                    {
+                        Wx::MessageBox("You can't deactivated ACE because DPO uses MPC_ROOT (ace).", "", Wx::wxOK | Wx::wxICON_ERROR);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (!List::MoreUtils::any {$_ eq $product_name} @products_to_deactivate)
+        {
+            push(@products_to_deactivate, $product_name);
+        }
+    }
+
+    if (scalar(@products_to_deactivate) == 0)
+    {
+        Wx::MessageBox("No selection", "", Wx::wxOK | Wx::wxICON_ERROR);
+        return;
+    }
+
+    my @projects_to_deactivate;
+    my $pool_path = $self->{text_ctrl_current_pool_root}->GetValue();
+
+    my @pool_products;
+    if ($self->get_products($pool_path, \@pool_products))
+    {
+        foreach my $product_name (@products_to_deactivate)
+        {
+            foreach my $product (@pool_products)
+            {
+                if ($product->{name} eq $product_name)
+                {
+                    if ($product->{dpo_compliant_product}->{value})
+                    {
+                        my ($path, $dpoproduct_xml) = $product->{xml_file} =~ /(.*)\/(DPOProduct.xml)/;
+                        my $versions_log = "$path/dpo_versions.log";
+
+                        my @versions_blocks;
+                        if (!DPOUtils::get_versions_blocks($versions_log, \@versions_blocks))
+                        {
+                            Wx::MessageBox("Can't extract versions from $versions_log");
+                            return;
+                        }
+
+                        foreach my $block (@versions_blocks)
+                        {
+                            foreach my $block_project (@{$block->{projects}})
+                            {
+                                if (!List::MoreUtils::any {$_ eq $block_project->{project_name}} @projects_to_deactivate)
+                                {
+                                    push(@projects_to_deactivate, $block_project->{project_name});
+                                }
+                            }
+                        }
+
+                        last;
+                    }
+                    else
+                    {
+                        # No deps for non dpo compliant product
+                    }
+                }
+            }
+        }
+    }
+
+    my @listEnvVarValues;
+    foreach my $product_to_deactivate (@products_to_deactivate)
+    {
+        my $env_var = DPOEnvVar->new(uc($product_to_deactivate) . "_ROOT", ""); # No need of path
+        push(@listEnvVarValues, $env_var);
+    }
+
+    foreach my $project_to_deactivate (@projects_to_deactivate)
+    {
+        my $env_var = DPOEnvVar->new(uc($project_to_deactivate) . "_PRJ_ROOT", ""); # No need of path
+        push(@listEnvVarValues, $env_var);
+    }
+
+    if (!DPOEnvVars::system_del_env_vars(\@listEnvVarValues))
+    {
+        Wx::MessageBox("Can't delete selected env. vars.", "", Wx::wxOK | Wx::wxICON_ERROR);
+        return;
+    }
+
+    Wx::MessageBox("Deactivation done.");
 
     return;
 
