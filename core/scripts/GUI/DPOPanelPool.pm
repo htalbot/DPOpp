@@ -151,7 +151,7 @@ sub new {
     $name   = ""                 unless defined $name;
 
     # begin wxGlade: DPOPanelPool::new
-    $style = wxTAB_TRAVERSAL 
+    $style = wxTAB_TRAVERSAL
         unless defined $style;
 
     $self = $self->SUPER::new( $parent, $id, $pos, $size, $style, $name );
@@ -2152,6 +2152,7 @@ sub get_dependencies_to_activate
     foreach my $dep (@{$project->{dependencies_when_dynamic}}, @{$project->{dependencies_when_static}})
     {
         my $dep_name = "";
+        my $dep_as_product = 0;
         if ($dep->{dpo_compliant}->{value})
         {
             $dep_name = $dep->{name};
@@ -2159,6 +2160,7 @@ sub get_dependencies_to_activate
         else
         {
             $dep_name = $dep->{dpo_compliant}->{product_name};
+            $dep_as_product = 1;
         }
 
         my $found = 0;
@@ -2176,6 +2178,12 @@ sub get_dependencies_to_activate
         if (!$found)
         {
             $prod_proj_to_activate = ProductProjectToActivate->new($dep_name);
+            $prod_proj_to_activate->{type} = "project";
+            if ($dep_as_product)
+            {
+                $prod_proj_to_activate->{type} = "product";
+            }
+
             push(@$prods_projs_to_activate_ref, $prod_proj_to_activate);
         }
 
@@ -2214,9 +2222,30 @@ sub get_dependencies_to_activate
                         && $pool_product->{flavour} eq $dep->{dpo_compliant}->{product_flavour})
                     {
                         my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
+
+                        # Add the product associated to the project
+                        my $prod_found = 0;
+                        foreach my $x (@$prods_projs_to_activate_ref)
+                        {
+                            if ($x->{name} eq $dep->{dpo_compliant}->{product_name}
+                                && $x->{type} eq "product")
+                            {
+                                $prod_found = 1;
+                                last;
+                            }
+                        }
+
+                        if (!$prod_found)
+                        {
+                            my $prod_to_activate = ProductProjectToActivate->new($dep->{dpo_compliant}->{product_name});
+                            $prod_to_activate->{path} = $path;
+                            $prod_to_activate->{type} = "product";
+
+                            push(@$prods_projs_to_activate_ref, $prod_to_activate);
+                        }
+
                         my $module_path = "$path/modules/$dep_name/$dep->{version}";
                         $prod_proj_to_activate->{path} = $module_path;
-                        $prod_proj_to_activate->{type} = "project";
 
                         my $file = "$module_path/DPOProject.xml";
 
@@ -2274,7 +2303,6 @@ sub get_dependencies_to_activate
                     {
                         my ($path) = $pool_product->{xml_file} =~ /(.*)\/DPOProduct.xml/;
                         $prod_proj_to_activate->{path} = $path;
-                        $prod_proj_to_activate->{type} = "product";
                     }
                 }
             }
