@@ -1,0 +1,14 @@
+project {
+  includes += $(OPENCV_ROOT)/include
+  libpaths += $(OPENCV_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += opencv_nonfree320d
+    Release::lit_libs += opencv_nonfree320
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += opencv_nonfree320
+    // Release::lit_libs += opencv_nonfree320
+    lit_libs += opencv_nonfree320
+  }
+}

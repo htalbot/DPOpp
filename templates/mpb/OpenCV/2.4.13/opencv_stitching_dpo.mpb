@@ -1,0 +1,14 @@
+project {
+  includes += $(OPENCV_ROOT)/include
+  libpaths += $(OPENCV_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += opencv_stitching2413d
+    Release::lit_libs += opencv_stitching2413
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += opencv_stitching2413
+    // Release::lit_libs += opencv_stitching2413
+    lit_libs += opencv_stitching2413
+  }
+}

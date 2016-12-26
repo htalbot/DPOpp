@@ -1,0 +1,14 @@
+project {
+  includes += $(OPENCV_ROOT)/include
+  libpaths += $(OPENCV_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += opencv_haartraining_engined
+    Release::lit_libs += opencv_haartraining_engine
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += opencv_haartraining_engine
+    // Release::lit_libs += opencv_haartraining_engine
+    lit_libs += opencv_haartraining_engine
+  }
+}

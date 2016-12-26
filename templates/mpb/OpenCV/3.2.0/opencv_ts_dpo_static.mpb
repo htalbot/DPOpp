@@ -1,0 +1,14 @@
+project {
+  includes += $(OPENCV_ROOT)/include
+  libpaths += $(OPENCV_ROOT)/lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += opencv_ts320d
+    Release::lit_libs += opencv_ts320
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += opencv_ts320
+    // Release::lit_libs += opencv_ts320
+    lit_libs += opencv_ts320
+  }
+}

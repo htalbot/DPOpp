@@ -25,3 +25,5 @@ run/
 !*xternal2*.exe
 !*xternal2*.vcxproj
 !*xternal2*.sln
+core/scripts/tests/*
+!core/scripts/tests/Externals/
