@@ -1,0 +1,10 @@
+project {
+  includes += $(WXWIDGETS_ROOT)/lib/vc_x64_lib
+
+  specific(prop:windows) {
+    Debug::lit_libs   += wxexpatd
+    Release::lit_libs += wxexpat
+  } else {
+    lit_libs += wxexpat
+  }
+}

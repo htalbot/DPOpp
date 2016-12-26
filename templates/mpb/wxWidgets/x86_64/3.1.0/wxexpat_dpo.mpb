@@ -1,0 +1,14 @@
+project {
+  includes += $(WXWIDGETS_ROOT)/include
+  libpaths += $(WXWIDGETS_ROOT)/lib/vc_x64_dll
+
+  specific(prop:windows) {
+    Debug::lit_libs   += wxexpatd
+    Release::lit_libs += wxexpat
+  } else {
+    // TO_DO: linux
+    // Debug::lit_libs += wxexpat
+    // Release::lit_libs += wxexpat
+    lit_libs += wxexpat
+  }
+}

@@ -4763,8 +4763,8 @@ sub on_combo_box_non_mpc_compliant_test
         $self->{text_ctrl_non_mpc_compliant_root_path}->SetValue("C:/usr/wxWidgets-3.0.2");
         $self->{text_ctrl_non_mpc_compliant_pool_path}->SetValue($dpo_pool_path);
         $self->{text_ctrl_non_mpc_compliant_product_name}->SetValue("wxWidgets");
-        $self->{text_ctrl_non_mpc_compliant_product_version}->SetValue("3.0.2");
-        $self->{text_ctrl_non_mpc_compliant_product_flavour}->SetValue("has_mode_t");
+        $self->{text_ctrl_non_mpc_compliant_product_version}->SetValue("3.1.0");
+        $self->{text_ctrl_non_mpc_compliant_product_flavour}->SetValue("vanilla");
     }
 
     if ($value eq "External1")

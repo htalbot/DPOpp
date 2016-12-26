@@ -1,0 +1,16 @@
+
+project {
+  requires += wxwindows
+  includes += $(WXWIDGETS_ROOT)/include
+  macros   += WXUSINGDLL
+  libpaths += $(WXWIDGETS_ROOT)/lib/vc_x64_lib
+
+  specific(prop:windows) {
+    Debug::includes += $(WXWIDGETS_ROOT)/lib/vc_x64_lib/mswud
+    Release::includes += $(WXWIDGETS_ROOT)/lib/vc_x64_lib/mswu
+    Debug::lit_libs   += wxbase31ud
+    Release::lit_libs += wxbase31u
+  } else {
+    libs += wxbase31u
+  }
+}

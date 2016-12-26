@@ -1,0 +1,8 @@
+project: wxbase_dpo_static {
+  specific(prop:windows) {
+    Debug::lit_libs   += wxbase31ud_net
+    Release::lit_libs += wxbase31u_net
+  } else {
+    libs += wxbase31u_net
+  }
+}

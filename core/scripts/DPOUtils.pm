@@ -2116,6 +2116,9 @@ sub available_tool_chains
         push(@$tools, "vc8");
         push(@$tools, "vc9");
         push(@$tools, "vc10");
+        push(@$tools, "vc11");
+        push(@$tools, "vc12");
+        push(@$tools, "vc14");
     }
 }
 

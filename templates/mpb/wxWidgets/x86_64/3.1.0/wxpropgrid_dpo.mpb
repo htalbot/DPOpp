@@ -1,0 +1,8 @@
+project: wxadvanced_dpo {
+  specific(prop:windows) {
+    Debug::lit_libs   += wxmsw31ud_propgrid
+    Release::lit_libs += wxmsw31u_propgrid
+  } else {
+    libs += wxmsw31u_propgrid
+  }
+}

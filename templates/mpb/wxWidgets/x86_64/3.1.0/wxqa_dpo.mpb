@@ -1,0 +1,8 @@
+project: wxcore_dpo, wxbase_xml_dpo {
+  specific(prop:windows) {
+    Debug::lit_libs   += wxmsw31ud_qa
+    Release::lit_libs += wxmsw31u_qa
+  } else {
+    libs += wxmsw31u_qa
+  }
+}
