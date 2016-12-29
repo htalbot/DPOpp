@@ -3127,7 +3127,21 @@ sub prepare_actions_on_working_project_tree
         else
         {
             $tree_ctrl = $self->{tree_ctrl_working_project_exe};
-            $deps = $self->{working_project}->{dependencies_when_dynamic};
+            if ($self->{working_project})
+            {
+                if ($self->{working_project}->{dependencies_when_dynamic})
+                {
+                    $deps = $self->{working_project}->{dependencies_when_dynamic};
+                }
+                else
+                {
+                    print "\$self->{working_project}->{dependencies_when_dynamic} is null\n";
+                }
+            }
+            else
+            {
+                print "\$self->{working_project} is null\n";
+            }
         }
     }
 
