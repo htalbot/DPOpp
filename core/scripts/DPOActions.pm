@@ -3042,8 +3042,7 @@ sub prevent_dynamic_when_static_dep
         {
             print $fh "    // ...and $proj->{name} is static (in $parent->{name}):\n";
 
-            my @new_libs_lines;
-
+			my @all_lines;
 
             if ($proj->{dpo_compliant}->{value})
             {
@@ -3092,21 +3091,9 @@ sub prevent_dynamic_when_static_dep
                     {
                         foreach my $line (@$block)
                         {
-                            if ($line =~ /specific/
-                                || $line =~ /feature/
-                                || $line =~ /libs.*=/)
-                            {
-                                push(@new_libs_lines, $line);
-                            }
+	                		push(@all_lines, $line);
                         }
-                        print $fh "    }\n";
                     }
-
-                    foreach my $line (@non_block_libs)
-                    {
-                        push(@new_libs_lines, $line);
-                    }
-                    print $fh "\n";
                 }
             }
 
@@ -3118,10 +3105,8 @@ sub prevent_dynamic_when_static_dep
                 return 0;
             }
 
-            my $substractions = "";
-            foreach my $line (@new_libs_lines)
-            {
-                DPOUtils::trim(\$line);
+			foreach my $line (@all_lines)
+			{
                 if ($line =~ /\+=/)
                 {
                     $line =~ s/\+=/\-=/;
@@ -3130,17 +3115,17 @@ sub prevent_dynamic_when_static_dep
                 {
                     $line =~ s/=/\-=/;
                 }
-                $substractions .= "        Release::$line\n";
-                $substractions .= "        Debug::$line\n";
-            }
-
+				
+	            print $fh $line;
+				
+			}
+			
             print $fh
                 "    specific {\n" .
-                $substractions .
-                "        Release::lit_libs += $release_static_name\n" .
                 "        Debug::lit_libs += $debug_static_name\n" .
+                "        Release::lit_libs += $release_static_name\n" .
                 "    }\n";
-
+			
             print $fh "    macros += \"" . uc($proj->{name}) . "_HAS_DLL=0\"\n\n";
         }
 
