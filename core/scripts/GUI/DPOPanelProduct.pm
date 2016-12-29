@@ -4862,6 +4862,10 @@ sub close_product
     $self->{list_ctrl_product_projects}->DeleteAllItems();
     $self->{tree_ctrl_runtime_pack}->DeleteAllItems();
 
+    $self->{tree_ctrl_working_project_dynamic}->DeleteAllItems();
+    $self->{tree_ctrl_working_project_static}->DeleteAllItems();
+    $self->{tree_ctrl_working_project_exe}->DeleteAllItems();
+
     $self->{last_product_name} = "";
 
     $self->enable_product_elements(0);
