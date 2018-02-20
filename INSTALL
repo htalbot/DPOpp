@@ -43,7 +43,7 @@ Windows
     DPO
     ---
 
-        Get it from https://github.com/htalbot/DPOpp.git.
+        Get it from https://github.com/htalbot/DPOpp.git. (If you're reading this, you probably do it from github)
 
             I'm used to install it in C:\dev
 
@@ -59,7 +59,7 @@ Windows
 
             From C:\dev\dpo\templates\pools, choose a pool and copy it
             in C:\dev\dpo_pool-<arch>-<os>. Where <arch> is 'x86_64' or 'i686'
-            and os is 'windows'. Again, C:\dev is my directory of choice.
+            and os is 'windows' or 'linux'. Again, C:\dev is my directory of choice.
 
             For example: C:\dev\dpo_pool-x86_64-windows
 
