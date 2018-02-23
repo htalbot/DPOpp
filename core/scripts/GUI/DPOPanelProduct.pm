@@ -6324,7 +6324,8 @@ sub on_combobox_toolchain
 
     $self->{combo_box_toolchain}->SetBackgroundColour(Wx::Colour->new(255, 255, 255));
 
-    if (uc($self->{combo_box_toolchain}->GetValue()) =~ /^VC/)
+    if (uc($self->{combo_box_toolchain}->GetValue()) =~ /^VC/
+        || uc($self->{combo_box_toolchain}->GetValue()) =~ /^VS/)
     {
         $self->{button_ide}->Enable(1);
     }

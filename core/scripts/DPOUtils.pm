@@ -2119,6 +2119,7 @@ sub available_tool_chains
         push(@$tools, "vc11");
         push(@$tools, "vc12");
         push(@$tools, "vc14");
+        push(@$tools, "vs2017");
     }
 }
 

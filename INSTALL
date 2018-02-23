@@ -128,7 +128,7 @@ Windows
 
             A slightly faster way to define DPO environment variables:
 
-                - Copy dpo\dpo_env_vars.cta file into C:\cat_back (create this
+                - Copy dpo\dpo_env_vars.cta file into C:\cta_back (create this
                   directory if it doesn't exist)
                 - Make sure that the path (C:\dev\dpo) is the right one (maybe
                   C:\dev is not where you installed DPO)
